@@ -198,7 +198,6 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 .auth-card{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:22px 18px;display:grid;gap:14px}
 .auth-card h1{margin:0;font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:-.02em;text-wrap:balance}
 .auth-card p{margin:0}
-input.code{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.3em;text-align:center;font-variant-numeric:tabular-nums}
 .err{color:var(--danger);font-size:13px;margin:0}
 .btn.wide{width:100%}
 .btn:disabled{opacity:.55;cursor:default}
@@ -310,23 +309,22 @@ input.code{font-family:var(--display);font-weight:700;font-size:26px;letter-spac
 </dialog>
 
 <div class="auth" id="auth" hidden>
-  <form class="auth-card" id="authEmail" novalidate>
-    <h1>Tile Week</h1>
-    <p class="help">Sign in to keep your board in sync across your devices. We’ll email you a sign-in code.</p>
-    <div class="field"><label for="aEmail">Email</label><input id="aEmail" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" required></div>
-    <p class="err" id="aEmailErr" hidden></p>
+  <form class="auth-card" id="authForm" novalidate>
+    <h1 id="aTitle">Tile Week</h1>
+    <p class="help" id="aLead">Sign in to keep your board in sync across your devices.</p>
+    <div class="field" id="aEmailField"><label for="aEmail">Email</label><input id="aEmail" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" required></div>
+    <div class="field" id="aPassField"><label for="aPass">Password</label><input id="aPass" type="password" autocomplete="current-password" required><span class="help" id="aPassHelp" hidden>At least 8 characters.</span></div>
+    <p class="err" id="aErr" role="alert" hidden></p>
     <p class="help" id="aSwitchNote" hidden>Signing in with a different email clears this device’s board.</p>
-    <button class="btn primary wide" type="submit" id="aSend">Email me a code</button>
+    <button class="btn primary wide" type="submit" id="aSubmit">Sign in</button>
+    <div class="linkrow"><button class="link" type="button" id="aMode">Create an account</button><button class="link" type="button" id="aForgot">Forgot password?</button></div>
     <button class="btn wide" type="button" id="aSkip">Use on this device only</button>
   </form>
-  <form class="auth-card" id="authCode" novalidate hidden>
-    <h1>Check your email</h1>
-    <p class="help" id="aCodeHelp"></p>
-    <div class="field"><label for="aCode">Code</label><input id="aCode" class="code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required></div>
-    <p class="err" id="aCodeErr" hidden></p>
-    <button class="btn primary wide" type="submit" id="aVerify">Sign in</button>
-    <div class="linkrow"><button class="link" type="button" id="aBack">Use a different email</button><button class="link" type="button" id="aResend">Send a new code</button></div>
-  </form>
+  <div class="auth-card" id="authMsg" role="status" hidden>
+    <h1 id="mTitle">Check your email</h1>
+    <p class="help" id="mText"></p>
+    <button class="btn primary wide" type="button" id="mBack">Back to sign in</button>
+  </div>
 </div>
 
 <div class="toast" id="toast" role="status"></div>
@@ -747,14 +745,22 @@ function supabaseAdapter(uid) {
   };
 }
 async function bootCloud() {
+  // A link from a Supabase email (confirm address, reset password) lands here with details in the URL.
+  const link = new URLSearchParams(location.hash.slice(1));
+  const linkType = link.get('type'), linkErr = link.get('error_description');
   try {
     if (!window.supabase) await loadScript('supabase.js');
-    sb = sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
+    // "implicit" lets a link work in a different browser from the one that asked for it,
+    // e.g. a reset requested in the home screen app and opened in Safari.
+    sb = sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'implicit' } });
   } catch { sb = null; setSync('offline'); return; }
-  if (acct) { adapter = supabaseAdapter(acct); syncNow(); return; }
   const { data } = await sb.auth.getSession().catch(() => ({ data: null }));
-  if (data && data.session) startCloud(data.session.user);
-  else { setSync('local'); openAuth(); }
+  const s = data && data.session;
+  if (linkType === 'recovery' && s) { recoveryUser = s.user; openAuth('newpass'); return; }
+  if (acct) { adapter = supabaseAdapter(acct); syncNow(); }
+  else if (s) { startCloud(s.user); if (linkType) toast('Email confirmed. You’re signed in.'); }
+  else { setSync('local'); openAuth('signin'); }
+  if (linkErr) { openAuth('signin'); showErr(`That link didn’t work (${linkErr}). Sign in, or ask for a new link.`); }
 }
 function startCloud(u) {
   useAccount(u.id);
@@ -763,50 +769,72 @@ function startCloud(u) {
   render(); syncNow();
 }
 
-/* ---------- sign-in screen ---------- */
-let authEmail = '', resendT = null;
-function openAuth() {
+/* ---------- sign-in screen: email and password ---------- */
+let authMode = 'signin', recoveryUser = null;
+const appUrl = () => location.origin + location.pathname;
+const AUTH = {
+  signin:  { title: 'Tile Week', lead: 'Sign in to keep your board in sync across your devices.', submit: 'Sign in', mode: 'Create an account', pass: 'current-password' },
+  signup:  { title: 'Create your account', lead: 'Use your email and a password. You’ll use them to sign in on each of your devices.', submit: 'Create account', mode: 'I already have an account', pass: 'new-password' },
+  forgot:  { title: 'Reset your password', lead: 'Enter your email and we’ll send you a link to set a new password.', submit: 'Email me a link', mode: 'Back to sign in' },
+  newpass: { title: 'Set a new password', lead: 'Choose a new password for your account.', submit: 'Save password', pass: 'new-password' },
+};
+function openAuth(mode = 'signin') {
   if (!sb) { toast('Connect to the internet to sign in'); return; }
-  $('#auth').hidden = false; $('#authEmail').hidden = false; $('#authCode').hidden = true;
-  $('#aEmailErr').hidden = true; $('#aSwitchNote').hidden = !acct;
+  authMode = mode; const m = AUTH[mode];
+  $('#auth').hidden = false; $('#authForm').hidden = false; $('#authMsg').hidden = true;
+  $('#aTitle').textContent = m.title; $('#aLead').textContent = m.lead;
+  $('#aSubmit').textContent = m.submit;
+  $('#aEmailField').hidden = mode === 'newpass';
+  $('#aPassField').hidden = mode === 'forgot';
+  $('#aPass').value = ''; $('#aPass').autocomplete = m.pass || 'off';
+  $('#aPassHelp').hidden = !(mode === 'signup' || mode === 'newpass');
+  $('#aMode').hidden = !m.mode; $('#aMode').textContent = m.mode || '';
+  $('#aForgot').hidden = mode !== 'signin';
+  $('#aSkip').hidden = mode === 'newpass';
   $('#aSkip').textContent = acct ? 'Not now' : 'Use on this device only';
-  $('#aEmail').value = authEmail || LS.get('email') || '';
+  $('#aSwitchNote').hidden = !acct || mode === 'newpass';
+  if (!$('#aEmail').value) $('#aEmail').value = LS.get('email') || '';
+  showErr('');
 }
 const closeAuth = () => { $('#auth').hidden = true; };
-function showErr(el, msg) { el.textContent = msg; el.hidden = !msg; }
-async function sendCode() {
-  const email = $('#aEmail').value.trim();
-  if (!/^\S+@\S+\.\S+$/.test(email)) { showErr($('#aEmailErr'), 'Enter your full email address, like name@example.com.'); return; }
-  const btn = $('#aSend'); btn.disabled = true; btn.textContent = 'Sending…';
-  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } }).catch(e => ({ error: e }));
-  btn.disabled = false; btn.textContent = 'Email me a code';
-  if (error) { showErr($('#aEmailErr'), /fetch|network/i.test(error.message || '') ? 'You’re offline. Connect to the internet and try again.' : (error.message || 'Couldn’t send the code. Try again.')); return false; }
-  authEmail = email;
-  $('#authEmail').hidden = true; $('#authCode').hidden = false;
-  $('#aCodeHelp').textContent = `We sent a code to ${email}. Enter it here. It can take a minute to arrive.`;
-  $('#aCode').value = ''; showErr($('#aCodeErr'), '');
-  startResendTimer(); $('#aCode').focus();
-  return true;
+function showErr(msg) { const el = $('#aErr'); el.textContent = msg; el.hidden = !msg; }
+function showMsg(title, text) { $('#authForm').hidden = true; $('#authMsg').hidden = false; $('#mTitle').textContent = title; $('#mText').textContent = text; }
+function authError(error) {
+  const msg = String((error && error.message) || '');
+  if (/fetch|network|load failed/i.test(msg)) return 'You’re offline. Connect to the internet and try again.';
+  if (/invalid login credentials/i.test(msg)) return 'That email and password don’t match. Try again, or reset your password.';
+  if (/email not confirmed/i.test(msg)) return 'Confirm your email first: tap the link we sent you, then sign in here.';
+  if (/already registered|already exists/i.test(msg)) return 'There’s already an account for that email. Sign in instead.';
+  return msg || 'Something went wrong. Try again.';
 }
-function startResendTimer() {
-  const b = $('#aResend'); let left = 60;
-  clearInterval(resendT); b.disabled = true;
-  const tick = () => { b.textContent = left > 0 ? `Send a new code (${left}s)` : 'Send a new code'; if (left-- <= 0) { clearInterval(resendT); b.disabled = false; } };
-  tick(); resendT = setInterval(tick, 1000);
-}
-$('#authEmail').addEventListener('submit', e => { e.preventDefault(); sendCode(); });
+$('#aMode').onclick = () => openAuth(authMode === 'signin' ? 'signup' : 'signin');
+$('#aForgot').onclick = () => openAuth('forgot');
 $('#aSkip').onclick = () => { closeAuth(); if (!acct) setSync('local'); };
-$('#aBack').onclick = () => { $('#authCode').hidden = true; $('#authEmail').hidden = false; };
-$('#aResend').onclick = async () => { $('#aEmail').value = authEmail; if (await sendCode() === false) { $('#authCode').hidden = false; $('#authEmail').hidden = true; showErr($('#aCodeErr'), $('#aEmailErr').textContent); } };
-$('#authCode').addEventListener('submit', async e => {
+$('#mBack').onclick = () => openAuth('signin');
+$('#authForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const token = $('#aCode').value.replace(/\D/g, '');
-  if (token.length < 6) { showErr($('#aCodeErr'), 'Enter the code from the email.'); return; }
-  const btn = $('#aVerify'); btn.disabled = true; btn.textContent = 'Signing in…';
-  const { data, error } = await sb.auth.verifyOtp({ email: authEmail, token, type: 'email' }).catch(err => ({ error: err }));
-  btn.disabled = false; btn.textContent = 'Sign in';
-  if (error || !data || !data.user) { showErr($('#aCodeErr'), 'That code didn’t work. Check it, or send a new code.'); return; }
-  closeAuth(); startCloud(data.user); toast('Signed in');
+  const email = $('#aEmail').value.trim(), password = $('#aPass').value;
+  if (authMode !== 'newpass' && !/^\S+@\S+\.\S+$/.test(email)) { showErr('Enter your full email address, like name@example.com.'); return; }
+  if (authMode !== 'forgot' && !password) { showErr('Enter your password.'); return; }
+  if ((authMode === 'signup' || authMode === 'newpass') && password.length < 8) { showErr('Use at least 8 characters for your password.'); return; }
+  const btn = $('#aSubmit'), label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Please wait…'; showErr('');
+  const run = {
+    signin: () => sb.auth.signInWithPassword({ email, password }),
+    signup: () => sb.auth.signUp({ email, password, options: { emailRedirectTo: appUrl() } }),
+    forgot: () => sb.auth.resetPasswordForEmail(email, { redirectTo: appUrl() }),
+    newpass: () => sb.auth.updateUser({ password }),
+  }[authMode];
+  const { data, error } = await run().catch(err => ({ data: null, error: err }));
+  btn.disabled = false; btn.textContent = label;
+  if (error) { showErr(authError(error)); return; }
+  if (authMode === 'forgot') { showMsg('Check your email', `If there’s an account for ${email}, we sent it a link to set a new password. The link opens in your browser; after saving the new password there, sign in with it here.`); return; }
+  if (authMode === 'signup' && !(data && data.session)) { showMsg('Check your email', `We sent a link to ${email}. Tap it to confirm your address, then come back here and sign in.`); return; }
+  const user = (data && data.user) || recoveryUser;
+  if (!user) { showErr('Something went wrong. Try again.'); return; }
+  const wasNewpass = authMode === 'newpass';
+  recoveryUser = null; closeAuth(); startCloud(user);
+  toast(wasNewpass ? 'Password saved' : authMode === 'signup' ? 'Account created' : 'Signed in');
 });
 
 /* ---------- tray interactions: tap + drag ---------- */

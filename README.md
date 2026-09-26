@@ -2,7 +2,7 @@
 
 Tile Week is a weekly reward board. You make goal tiles, each worth a number of points (for example "Pilates, 15 pts"), and drag them onto the days of the week when you do them. As your weekly total grows you climb a ladder of rewards you set yourself, such as "Fancy coffee at 20 pts" or "New leggings at 70 pts". The board resets at the start of each week, and past weeks stay in History.
 
-Each person signs in with their email and gets their own board, synced across their devices. It keeps working with no signal and syncs when the connection comes back.
+Each person signs in with their email and a password and gets their own board, synced across their devices. It keeps working with no signal and syncs when the connection comes back.
 
 ## Files
 
@@ -18,14 +18,12 @@ Each person signs in with their email and gets their own board, synced across th
 
 1. Create a free account and a new project at supabase.com.
 2. In the project, open **SQL Editor**, paste all of `supabase/schema.sql`, and run it.
-3. Make sign-in emails contain a code instead of a link. Open **Authentication > Email Templates**, choose **Magic Link**, and replace `{{ .ConfirmationURL }}` with `{{ .Token }}`. For example:
-   ```html
-   <h2>Your Tile Week code</h2>
-   <p>Enter this code in Tile Week: <strong>{{ .Token }}</strong></p>
-   ```
-   A code works better than a link on iPhone, because a link opens Safari instead of the home screen app.
-4. Copy the project's **URL** and its **anon / publishable** key from the project's API settings. Never use the `service_role` or secret key.
-5. Put them at the top of the script in `index.html`:
+3. Tell Supabase where the app lives, so links in its emails open the app. Under **Authentication > URL Configuration**, set **Site URL** to the GitHub Pages address (see below), for example `https://<your-username>.github.io/weekly-goal-tile-app/`.
+4. Choose whether new accounts must confirm their email. This is the **Confirm email** switch in the Email sign-in settings (under **Authentication**). The app works either way:
+   - **On (recommended):** after creating an account, the person taps a link in an email before they can sign in. This catches mistyped addresses.
+   - **Off:** the account works straight away, and nothing is emailed until someone resets a password.
+5. Copy the project's **URL** and its **anon / publishable** key from the project's API settings. Never use the `service_role` or secret key.
+6. Put them at the top of the script in `index.html`:
    ```js
    const SUPABASE_URL = 'https://your-project.supabase.co';
    const SUPABASE_KEY = 'your-anon-or-publishable-key';
@@ -33,6 +31,8 @@ Each person signs in with their email and gets their own board, synced across th
    These two values are meant to be public. The access rules in `schema.sql` are what keep each person's board private.
 
 Until those two values are filled in, the app works on one device only and saves to that browser.
+
+Sign-in uses Supabase's standard emails (confirm your address, reset your password) without changing their templates, so no custom email setup is needed.
 
 ## Host it with GitHub Pages
 
@@ -43,9 +43,11 @@ Until those two values are filled in, the app works on one device only and saves
 
 ## Add it to an iPhone home screen
 
-1. Open the site in **Safari** and sign in.
+1. Open the site in **Safari**.
 2. Tap the **Share** button, then **Add to Home Screen**, and tap **Add**.
-3. Open it from the home screen. If it asks you to sign in again there, do so once; the code arrives by email as before.
+3. Open it from the home screen and sign in with your email and password.
+
+Links in Supabase's emails open in Safari, not the home screen app. After confirming your email or setting a new password there, go back to the home screen app and sign in with your password.
 
 ## How syncing works
 
@@ -66,5 +68,5 @@ To update the artifact after changing `index.html`, run `python3 tools/build_art
 
 These come from Supabase's plans, which can change. Check the current pricing page before relying on them.
 
-- Supabase's built-in email sender only sends a small number of emails per hour. That is fine for one person but may not be enough for a group; Supabase lets you connect your own email sender (SMTP) to raise it.
+- Supabase's built-in email sender only sends a small number of emails per hour. Emails are only sent when someone creates an account (if **Confirm email** is on) or resets a password, so this is fine for a few people. For more, Supabase lets you connect your own email sender (SMTP).
 - Free Supabase projects may be paused after a period of no use. Opening the app regularly avoids this.

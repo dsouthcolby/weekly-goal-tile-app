@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tile Week">
+<style>
+body{margin:0}
+[hidden]{display:none!important}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+</style>
+<title>Tile Week</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#EDEFF6; --surface:#FFFFFF; --surface2:#F6F7FB; --ink:#171A33; --muted:#5D6285; --line:#D8DBE8;
+  --accent:#3144D0; --accent-ink:#FFFFFF; --accent-soft:#E1E5FF; --good:#1D7F55; --good-soft:#D6F2E3; --danger:#C2362B;
+  --c0:#FFD6C7; --c1:#FCE59E; --c2:#C9EDD3; --c3:#CDE1FF; --c4:#E2D4FF; --c5:#FFD0E4; --cink:#171A33;
+  --shadow:0 10px 30px rgba(23,26,51,.18); --tray-h:230px;
+  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body:"Figtree", -apple-system, "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#10121D; --surface:#1A1D2C; --surface2:#222638; --ink:#ECEEF8; --muted:#9CA1C0; --line:#2D3149;
+    --accent:#8190FF; --accent-ink:#0D1030; --accent-soft:#262C58; --good:#5FD39D; --good-soft:#173A2B; --danger:#FF7B6E;
+    --c0:#5B3024; --c1:#574516; --c2:#1F4A30; --c3:#1F3A63; --c4:#3C2D66; --c5:#5A2440; --cink:#F2F3FA;
+    --shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#10121D; --surface:#1A1D2C; --surface2:#222638; --ink:#ECEEF8; --muted:#9CA1C0; --line:#2D3149;
+  --accent:#8190FF; --accent-ink:#0D1030; --accent-soft:#262C58; --good:#5FD39D; --good-soft:#173A2B; --danger:#FF7B6E;
+  --c0:#5B3024; --c1:#574516; --c2:#1F4A30; --c3:#1F3A63; --c4:#3C2D66; --c5:#5A2440; --cink:#F2F3FA;
+  --shadow:0 10px 30px rgba(0,0,0,.5);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:14px calc(var(--tray-h) + 24px)}
+
+/* Header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.brand{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;height:36px;min-width:36px;padding:0 12px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.top-actions{display:flex;gap:8px}
+.weeknav{display:flex;align-items:center;gap:8px;margin-top:14px;max-width:520px;margin-inline:auto}
+.weeknav .range{flex:1;text-align:center;font-weight:600;font-size:14px}
+.weeknav .range small{display:block;color:var(--muted);font-weight:500;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+
+/* Score + rewards */
+.score{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;gap:14px}
+.score-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pts{font-family:var(--display);font-weight:800;font-size:44px;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.pts span{font-size:16px;font-weight:600;color:var(--muted);letter-spacing:0;margin-left:4px}
+.meta{text-align:right;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;display:grid;gap:2px;justify-items:end}
+.meta b{color:var(--ink);font-weight:600}
+.track{position:relative;height:12px;background:var(--surface2);border-radius:999px;border:1px solid var(--line);margin-inline:6px}
+.track i.fill{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:999px;transition:width .35s ease}
+.track .mk{position:absolute;top:50%;width:14px;height:14px;margin-left:-7px;margin-top:-7px;border-radius:50%;background:var(--surface);border:2px solid var(--muted)}
+.track .mk.got{background:var(--good);border-color:var(--good)}
+.rewards{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.rw{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:13px;font-weight:600;border:1px solid var(--line);color:var(--muted);font-variant-numeric:tabular-nums}
+.rw .v{font-weight:500;opacity:.8}
+.rw.got{background:var(--good-soft);color:var(--good);border-color:transparent}
+.rw.next{color:var(--ink);border-color:var(--ink)}
+.nextline{font-size:13px;color:var(--muted)}
+.nextline b{color:var(--ink)}
+
+/* Days: horizontal columns */
+/* Columns adapt to width: 7 across when there's room, then 4, then 2, then a single stacked list. */
+.days{margin-top:16px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.day{display:flex;flex-direction:column;gap:8px;min-height:230px;padding:10px;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;transition:border-color .15s, background .15s, transform .15s}
+.day .dh{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-family:var(--display)}
+.day .dh b{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.day .dh .dn{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin-left:4px}
+.day .dsum{font-family:var(--body);font-variant-numeric:tabular-nums;font-weight:600;font-size:12px;color:var(--muted)}
+.day.today{border-color:var(--ink)}
+.day.today .dh b{color:var(--accent)}
+.day .chips{display:flex;flex-direction:column;gap:6px;flex:1}
+.day .empty{color:var(--muted);font-size:12.5px;opacity:.7;margin:auto 0;text-align:center}
+.day.armed{border-style:dashed;border-color:var(--accent);cursor:pointer}
+.day.hover{border-style:solid;border-color:var(--accent);background:var(--accent-soft);transform:scale(1.02)}
+.chip{display:flex;align-items:center;justify-content:space-between;gap:6px;border:0;border-radius:9px;padding:6px 8px;font-size:13px;font-weight:600;color:var(--cink);text-align:left;width:100%}
+.chip .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.chip .p{font-variant-numeric:tabular-nums;opacity:.75;font-weight:500;flex:none}
+.chip .x{display:none;flex:none;background:var(--ink);color:var(--bg);border-radius:6px;padding:0 6px;font-size:12px}
+.chip.open .x{display:inline-block}
+.chip.open .p{display:none}
+.chip.pop{animation:pop .35s ease}
+@media (max-width:899px){ .days{grid-template-columns:repeat(4,minmax(0,1fr))} .day{min-height:150px} }
+@media (max-width:579px){ .days{grid-template-columns:repeat(2,minmax(0,1fr))} .day{min-height:112px} }
+@media (max-width:359px){
+  .days{grid-template-columns:1fr}
+  .day{min-height:0;flex-direction:row;align-items:center}
+  .day .dh{flex-direction:column;align-items:flex-start;width:64px;flex:none}
+  .day .chips{flex-direction:row;flex-wrap:wrap}
+  .day .chip{width:auto;max-width:100%}
+  .day .empty{margin:0}
+}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.06)}100%{transform:scale(1)}}
+
+/* Tray */
+.tray{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;flex-direction:column;max-height:min(46vh,380px);background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(0,0,0,.06);padding:10px 0 calc(12px + env(safe-area-inset-bottom, 0px))}
+.tray-in{max-width:1120px;width:100%;margin:0 auto;display:flex;flex-direction:column;min-height:0;flex:1}
+.tray-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 8px;padding-inline:16px;font-size:12px;color:var(--muted);min-height:32px;flex:none}
+.tray-head .hint{font-weight:500;flex:1 1 170px;min-width:0}
+.tray-head .btns{display:flex;align-items:center;flex:none;margin-left:auto}
+.tray-head b{color:var(--ink)}
+.link{border:0;background:none;color:var(--accent);font-weight:600;font-size:13px;padding:4px 6px}
+.link.on{background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:4px 12px}
+/* Tiles wrap into as many rows as they need; the tray scrolls vertically once it hits its max height. */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;overflow-y:auto;overscroll-behavior:contain;padding:8px 16px 6px;min-height:0;flex:1}
+.tray.collapsed .tiles{display:none}
+@media (max-width:480px){ .tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px} .tile{height:92px!important;padding:9px!important} .tile .tn{font-size:13px!important} .tile .tp{font-size:20px!important} }
+@media (max-width:340px){ .tiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.tile{position:relative;width:100%;min-width:0;height:112px;-webkit-touch-callout:none;border-radius:16px;border:0;padding:10px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;color:var(--cink);user-select:none;-webkit-user-select:none;transition:transform .15s, box-shadow .15s}
+.tile .tn{font-weight:600;font-size:14px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tile .tp{font-family:var(--display);font-weight:800;font-size:24px;line-height:1;font-variant-numeric:tabular-nums}
+.tile .tp small{font-size:12px;font-weight:600;opacity:.7;margin-left:2px}
+.tile .pen{display:none;position:absolute;top:8px;right:8px;font-size:11px;font-weight:700;background:var(--ink);color:var(--bg);border-radius:6px;padding:1px 6px}
+.tiles.editing .tile[data-tile]{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--ink)}
+.tiles.editing .tile .pen{display:block}
+.tiles.editing .tile .tn{padding-right:30px}
+.tile.selected{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--accent);transform:translateY(-2px)}
+.tile.lifted{opacity:.35}
+.tile.add{background:transparent;border:1.5px dashed var(--line);color:var(--muted);align-items:center;justify-content:center;text-align:center;font-weight:600;font-size:13px;gap:4px}
+.tile.add .plus{font-size:28px;line-height:1;font-weight:400}
+.tray.full .tiles:not(.editing) .tile[data-tile]{opacity:.45}
+.ghost{position:fixed;z-index:50;pointer-events:none;box-shadow:var(--shadow);transform:rotate(-4deg) scale(1.05);transition:none}
+.cc0{background:var(--c0)}.cc1{background:var(--c1)}.cc2{background:var(--c2)}.cc3{background:var(--c3)}.cc4{background:var(--c4)}.cc5{background:var(--c5)}
+
+/* Sheets */
+dialog{border:0;padding:0;background:transparent;max-width:none;max-height:none;width:100%;height:100%;margin:0}
+dialog::backdrop{background:rgba(10,12,25,.45)}
+.sheet{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;background:var(--surface);color:var(--ink);border-radius:22px 22px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom, 0px));display:grid;gap:14px;max-height:88%;overflow-y:auto}
+.sheet h2{margin:0;font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.01em}
+.field{display:grid;gap:6px}
+.field label,.field .lab{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+input,select{font:inherit;font-size:16px;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%;min-width:0;max-width:100%;-webkit-appearance:none;appearance:none;margin:0}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
+.field .help,.help{font-size:12.5px;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.sw{width:40px;height:40px;border-radius:12px;border:2px solid transparent}
+.sw[aria-pressed="true"]{border-color:var(--ink)}
+.rlist{display:grid;gap:8px}
+.rrow{display:grid;grid-template-columns:minmax(0,1fr) 88px 44px;grid-template-areas:"name pts del";gap:8px;align-items:center}
+.rrow .rn{grid-area:name}.rrow .rp{grid-area:pts;text-align:center}.rrow .del{grid-area:del}
+.rrow .del{width:44px;height:44px;border:0;background:transparent;color:var(--danger);font-size:18px;border-radius:10px}
+.rhead{display:grid;grid-template-columns:minmax(0,1fr) 88px 44px;gap:8px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rhead span:nth-child(2){text-align:center}
+.rrow .plab{display:none}
+/* iPhone portrait: each reward becomes a small card — name on top, points + remove below. */
+@media (max-width:480px){
+  .rhead{display:none}
+  .rlist{gap:10px}
+  .rrow{grid-template-columns:auto minmax(0,1fr) 44px;grid-template-areas:"name name name" "plab pts del";padding:10px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+  .rrow .plab{display:block;grid-area:plab;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-right:4px}
+  .rrow .rp{text-align:left}
+}
+.actions{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-top:4px}
+.actions .right{display:flex;gap:10px;margin-left:auto}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:11px 16px;font-weight:600}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.ghostbtn{border-style:dashed;color:var(--muted)}
+.btn.danger{color:var(--danger);border-color:transparent;background:transparent;padding-inline:4px}
+.btn.danger.confirm{background:var(--danger);color:#fff;padding-inline:14px}
+.hist{display:grid;gap:8px}
+.hist .h{display:flex;justify-content:space-between;gap:10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);font-variant-numeric:tabular-nums}
+.hist .h b{font-family:var(--display);font-size:18px}
+.hist .h small{display:block;color:var(--muted)}
+.muted{color:var(--muted);font-size:13px}
+
+.toast{position:fixed;left:50%;bottom:calc(var(--tray-h) + 12px);transform:translate(-50%,10px);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:999px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;z-index:60;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">Tile Week</div>
+    <div class="top-actions">
+      <button class="iconbtn" id="histBtn" type="button">History</button>
+      <button class="iconbtn" id="setBtn" type="button">Settings</button>
+    </div>
+  </div>
+
+  <div class="weeknav">
+    <button class="iconbtn" id="prevW" type="button" aria-label="Previous week">‹</button>
+    <div class="range"><small id="wLabel">This week</small><span id="wRange"></span></div>
+    <button class="iconbtn" id="nextW" type="button" aria-label="Next week">›</button>
+  </div>
+
+  <section class="score" aria-live="polite">
+    <div class="score-row">
+      <div class="pts" id="pts">0<span>pts</span></div>
+      <div class="meta"><span id="meta"></span><button class="link" id="rwBtn" type="button">Edit rewards</button></div>
+    </div>
+    <div class="track" id="track"><i class="fill" style="width:0"></i></div>
+    <div class="nextline" id="nextline"></div>
+    <div class="rewards" id="rewards"></div>
+  </section>
+
+  <div class="days" id="days"></div>
+</div>
+
+<div class="tray" id="tray">
+  <div class="tray-in">
+    <div class="tray-head" id="trayHead"></div>
+    <div class="tiles" id="tiles"></div>
+  </div>
+</div>
+
+<dialog id="tileDlg">
+  <form class="sheet" id="tileForm" method="dialog">
+    <h2 id="tileTitle">New tile</h2>
+    <div class="field"><label for="tName">Name</label><input id="tName" maxlength="40" placeholder="e.g. Pilates class" required autocomplete="off"></div>
+    <div class="field"><label for="tPts">Points</label><input id="tPts" type="number" inputmode="numeric" min="1" max="999" value="10" required></div>
+    <div class="field"><span class="lab">Colour</span><div class="swatches" id="swatches"></div></div>
+    <p class="help" id="tNote">Changes also apply to this tile wherever it’s placed this week. Past weeks keep their original values.</p>
+    <div class="actions">
+      <button class="btn danger" id="tDel" type="button">Delete tile</button>
+      <div class="right">
+        <button class="btn" type="button" data-close>Cancel</button>
+        <button class="btn primary" type="submit">Save</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="rwDlg">
+  <form class="sheet" id="rwForm" method="dialog">
+    <h2>Rewards</h2>
+    <p class="help">Earn points during the week to unlock each reward. Points reset when a new week starts.</p>
+    <div class="rhead"><span>Reward</span><span>Points</span><span></span></div>
+    <div class="rlist" id="rlist"></div>
+    <button class="btn ghostbtn" id="rwAdd" type="button">+ Add reward</button>
+    <div class="actions"><div class="right">
+      <button class="btn" type="button" data-close>Cancel</button>
+      <button class="btn primary" type="submit">Save</button>
+    </div></div>
+  </form>
+</dialog>
+
+<dialog id="setDlg">
+  <form class="sheet" id="setForm" method="dialog">
+    <h2>Settings</h2>
+    <div class="field"><label for="sStart">Week starts on</label>
+      <select id="sStart"></select>
+      <span class="help">The board clears itself at the start of each week. Past weeks stay in History.</span></div>
+    <div class="field"><label for="sLimit">Tile limit per week</label><input id="sLimit" type="number" inputmode="numeric" min="0" max="200" placeholder="No limit"><span class="help">Leave blank for no limit.</span></div>
+    <div class="actions"><div class="right">
+      <button class="btn" type="button" data-close>Cancel</button>
+      <button class="btn primary" type="submit">Save</button>
+    </div></div>
+  </form>
+</dialog>
+
+<dialog id="histDlg">
+  <div class="sheet">
+    <h2>History</h2>
+    <div class="hist" id="histList"><p class="muted">Loading…</p></div>
+    <div class="actions"><div class="right"><button class="btn" type="button" data-close>Close</button></div></div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAYS_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const $ = s => document.querySelector(s);
+const rid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const SEED = {
+  weekStart: 6, limit: 0,
+  rewards: [
+    { id: 'r-coffee', name: 'Fancy coffee', points: 20 },
+    { id: 'r-bath', name: 'Bath + face mask', points: 40 },
+    { id: 'r-leggings', name: 'New leggings', points: 70 },
+  ],
+  tiles: [
+    { id: 't-pilates', name: 'Pilates', points: 15, color: 0 },
+    { id: 't-walk', name: '30 min walk', points: 5, color: 2 },
+    { id: 't-read', name: 'Read 20 pages', points: 5, color: 3 },
+    { id: 't-prep', name: 'Meal prep', points: 10, color: 1 },
+    { id: 't-sleep', name: 'In bed by 11', points: 5, color: 4 },
+  ],
+};
+// Older saves had a single target + reward; turn them into the rewards list.
+function normalize(l) {
+  const out = { ...SEED, ...l };
+  if (!Array.isArray(l.rewards)) {
+    out.rewards = l.target > 0 ? [{ id: rid(), name: l.reward || 'Reward', points: l.target }] : structuredClone(SEED.rewards);
+  }
+  delete out.target; delete out.reward;
+  out.rewards = [...out.rewards].sort((a, b) => a.points - b.points);
+  return out;
+}
+
+/* ---------- storage: db when available, localStorage as cache/fallback ---------- */
+const LS = {
+  get(k) { try { return JSON.parse(localStorage.getItem('tw:' + k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem('tw:' + k, JSON.stringify(v)); } catch {} },
+  keys() { try { return Object.keys(localStorage).filter(k => k.startsWith('tw:weeks/')).map(k => k.slice(3)); } catch { return []; } },
+};
+let db = null;
+const queues = {};
+function save(path, data) {
+  LS.set(path, data);
+  if (!db) return Promise.resolve();
+  return queues[path] = (queues[path] || Promise.resolve())
+    .then(() => db.doc(path).set(JSON.parse(JSON.stringify(data))))
+    .catch(e => toast(e && e.code === 'quota_exceeded' ? 'Storage is full. Delete old tiles or weeks.' : 'Couldn’t save. Check your connection.'));
+}
+
+/* ---------- state ---------- */
+let lib = normalize(LS.get('app/library') || structuredClone(SEED));
+let offset = 0, curStart = null, week = { start: null, items: [] };
+let unsubWeek = null, selectedTile = null, openChip = null, editingTile = null, editMode = false, scrolledFor = null;
+
+/* ---------- dates ---------- */
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const fromIso = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+function weekStartDate(off) {
+  const t = new Date(); t.setHours(0,0,0,0);
+  return addDays(t, -((t.getDay() - lib.weekStart + 7) % 7) + off * 7);
+}
+const fmt = d => `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+
+/* ---------- render ---------- */
+const total = items => items.reduce((s, i) => s + (Number(i.points) || 0), 0);
+
+function renderScore() {
+  const pts = total(week.items), count = week.items.length;
+  $('#pts').innerHTML = `${pts}<span>pts</span>`;
+  $('#meta').innerHTML = `<b>${count}</b> tile${count === 1 ? '' : 's'}` + (lib.limit ? ` of <b>${lib.limit}</b>` : '') + ` this week`;
+  const rws = lib.rewards;
+  const track = $('#track');
+  if (!rws.length) {
+    track.hidden = true; $('#rewards').innerHTML = '';
+    $('#nextline').innerHTML = 'No rewards yet. Tap <b>Edit rewards</b> to add some.';
+    return;
+  }
+  track.hidden = false;
+  const max = Math.max(...rws.map(r => r.points), 1);
+  track.innerHTML = `<i class="fill" style="width:${Math.min(100, pts / max * 100)}%"></i>` +
+    rws.map(r => `<span class="mk${pts >= r.points ? ' got' : ''}" style="left:${r.points / max * 100}%" title="${esc(r.name)}"></span>`).join('');
+  const next = rws.find(r => pts < r.points);
+  const got = rws.filter(r => pts >= r.points).length;
+  $('#nextline').innerHTML = next
+    ? `<b>${next.points - pts} pts</b> to ${esc(next.name)}` + (got ? ` · ${got} unlocked` : '')
+    : `<b>All ${rws.length} rewards unlocked</b> this week`;
+  $('#rewards').innerHTML = rws.map(r => `<span class="rw${pts >= r.points ? ' got' : r === next ? ' next' : ''}">${pts >= r.points ? '✓ ' : ''}${esc(r.name)} <span class="v">${r.points}</span></span>`).join('');
+}
+
+function render() {
+  const ws = fromIso(curStart), we = addDays(ws, 6);
+  $('#wRange').textContent = `${fmt(ws)} – ${fmt(we)}`;
+  $('#wLabel').textContent = offset === 0 ? 'This week' : offset === -1 ? 'Last week' : offset === 1 ? 'Next week' : (offset < 0 ? `${-offset} weeks ago` : `In ${offset} weeks`);
+  renderScore();
+
+  const today = iso(new Date());
+  const days = $('#days'); days.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(ws, i);
+    const items = week.items.filter(x => x.day === i);
+    const el = document.createElement('div');
+    el.className = 'day' + (iso(d) === today ? ' today' : '') + (selectedTile ? ' armed' : '');
+    el.dataset.day = i;
+    el.innerHTML = `<div class="dh"><span><b>${DAYS[d.getDay()]}</b><span class="dn">${d.getDate()}</span></span><span class="dsum">${items.length ? total(items) + ' pts' : ''}</span></div>
+      <div class="chips">${items.length ? items.map(x => `<button type="button" class="chip cc${x.color|0}${openChip === x.id ? ' open' : ''}" data-item="${x.id}"><span class="n">${esc(x.name)}</span><span class="p">+${x.points}</span><span class="x" data-remove="${x.id}" aria-label="Remove">✕</span></button>`).join('') : `<span class="empty">${selectedTile ? 'Tap to add' : 'Drop a tile here'}</span>`}</div>`;
+    days.appendChild(el);
+  }
+  renderTray();
+}
+
+function renderTray() {
+  const full = lib.limit > 0 && week.items.length >= lib.limit;
+  $('#tray').classList.toggle('full', full);
+  $('#tiles').classList.toggle('editing', editMode);
+  const head = $('#trayHead');
+  const sel = lib.tiles.find(t => t.id === selectedTile);
+  $('#tray').classList.toggle('collapsed', collapsed);
+  const editBtn = `<button class="link${editMode ? ' on' : ''}" data-act="editmode" type="button">${editMode ? 'Done editing' : 'Edit tiles'}</button>`;
+  const hideBtn = `<button class="link" data-act="collapse" type="button" aria-expanded="${!collapsed}">${collapsed ? 'Show tiles ▴' : 'Hide ▾'}</button>`;
+  const dragHint = coarse ? 'Hold a tile, then drag it onto a day. Or tap it.' : 'Drag a tile onto a day, or click it.';
+  if (collapsed) head.innerHTML = `<span class="hint">${lib.tiles.length} tiles</span><span class="btns">${hideBtn}</span>`;
+  else if (editMode) head.innerHTML = `<span class="hint">Tap a tile to change its name, points or colour</span><span class="btns">${editBtn}</span>`;
+  else if (sel) head.innerHTML = `<span class="hint">Tap a day to add <b>${esc(sel.name)}</b></span><span class="btns"><button class="link" data-act="edit" type="button">Edit</button><button class="link" data-act="cancel" type="button">Done</button></span>`;
+  else if (full) head.innerHTML = `<span class="hint">Weekly limit reached (${lib.limit} tiles)</span><span class="btns"><button class="link" data-act="settings" type="button">Change limit</button>${editBtn}${hideBtn}</span>`;
+  else head.innerHTML = `<span class="hint">${dragHint}</span><span class="btns">${editBtn}${hideBtn}</span>`;
+  $('#tiles').innerHTML = lib.tiles.map(t => `<button type="button" class="tile cc${t.color|0}${t.id === selectedTile ? ' selected' : ''}" data-tile="${t.id}"><span class="pen">Edit</span><span class="tn">${esc(t.name)}</span><span class="tp">${t.points}<small>pts</small></span></button>`).join('')
+    + `<button type="button" class="tile add" data-act="new"><span class="plus">+</span>New tile</button>`;
+}
+
+/* ---------- actions ---------- */
+function persistWeek() { save('weeks/' + curStart, { start: curStart, items: week.items, total: total(week.items) }); }
+
+function addItem(tileId, day) {
+  const t = lib.tiles.find(x => x.id === tileId); if (!t) return;
+  if (lib.limit > 0 && week.items.length >= lib.limit) { toast(`Weekly limit reached (${lib.limit} tiles)`); return; }
+  const before = total(week.items);
+  const item = { id: rid(), tileId: t.id, name: t.name, points: Number(t.points) || 0, color: t.color | 0, day: Number(day) };
+  week.items = [...week.items, item];
+  persistWeek(); render();
+  const chip = document.querySelector(`[data-item="${item.id}"]`); if (chip) chip.classList.add('pop');
+  const after = total(week.items);
+  const unlocked = lib.rewards.filter(r => before < r.points && after >= r.points);
+  toast(unlocked.length ? `Unlocked: ${unlocked.map(r => r.name).join(', ')}` : `+${item.points} · ${t.name} on ${DAYS_FULL[addDays(fromIso(curStart), Number(day)).getDay()]}`);
+}
+function removeItem(id) {
+  week.items = week.items.filter(x => x.id !== id);
+  openChip = null; persistWeek(); render();
+}
+
+let toastT;
+function toast(msg) {
+  const el = $('#toast'); el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+/* ---------- week loading ---------- */
+function loadWeek() {
+  const start = iso(weekStartDate(offset));
+  curStart = start;
+  week = LS.get('weeks/' + start) || { start, items: [] };
+  if (!Array.isArray(week.items)) week.items = [];
+  openChip = null; render();
+  if (unsubWeek) { unsubWeek(); unsubWeek = null; }
+  if (db) {
+    unsubWeek = db.doc('weeks/' + start).onSnapshot(s => {
+      if (start !== curStart) return;
+      const d = s.exists ? s.data() : null;
+      week = d ? { start, items: Array.isArray(d.items) ? structuredClone(d.items) : [] } : { start, items: [] };
+      LS.set('weeks/' + start, { ...week, total: total(week.items) });
+      render();
+    }, () => {});
+  }
+}
+
+// Push a tile's new name/points/colour into this calendar week's placements.
+async function applyTileToThisWeek(t) {
+  const start = iso(weekStartDate(0));
+  const patch = items => items.map(x => x.tileId === t.id ? { ...x, name: t.name, points: t.points, color: t.color } : x);
+  if (start === curStart) {
+    if (!week.items.some(x => x.tileId === t.id)) return;
+    week.items = patch(week.items); persistWeek(); return;
+  }
+  let data = LS.get('weeks/' + start);
+  if (db) { try { const s = await db.doc('weeks/' + start).get(); data = s.exists ? structuredClone(s.data()) : null; } catch {} }
+  if (!data || !Array.isArray(data.items) || !data.items.some(x => x.tileId === t.id)) return;
+  const items = patch(data.items);
+  save('weeks/' + start, { start, items, total: total(items) });
+}
+
+/* ---------- tray interactions: tap + drag ---------- */
+let drag = null, suppressClick = false;
+const tilesEl = $('#tiles'), daysEl = $('#days');
+
+const coarse = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+let collapsed = false; try { collapsed = localStorage.getItem('tw:ui:collapsed') === '1'; } catch {}
+
+function startDrag() {
+  if (lib.limit > 0 && week.items.length >= lib.limit) { toast(`Weekly limit reached (${lib.limit} tiles)`); drag = null; return false; }
+  drag.started = true; suppressClick = true;
+  const r = drag.el.getBoundingClientRect();
+  const g = drag.el.cloneNode(true); g.classList.add('ghost'); g.classList.remove('selected');
+  g.style.width = r.width + 'px'; g.style.height = r.height + 'px';
+  drag.offX = drag.x0 - r.left; drag.offY = drag.y0 - r.top;
+  g.style.left = r.left + 'px'; g.style.top = r.top + 'px';
+  document.body.appendChild(g); drag.ghost = g; drag.el.classList.add('lifted');
+  document.querySelectorAll('.day').forEach(d => d.classList.add('armed'));
+  return true;
+}
+
+// Touch: press and hold ~0.2s to pick a tile up, so swiping still scrolls the tray.
+// Mouse: pick up as soon as it moves.
+tilesEl.addEventListener('pointerdown', e => {
+  suppressClick = false;
+  if (editMode) return;
+  const t = e.target.closest('.tile[data-tile]'); if (!t) return;
+  drag = { id: t.dataset.tile, el: t, x0: e.clientX, y0: e.clientY, type: e.pointerType, started: false, ghost: null, over: null };
+  if (e.pointerType !== 'mouse') {
+    const d = drag;
+    d.timer = setTimeout(() => { if (drag === d && !d.started && startDrag()) d.el.classList.add('lifted'); }, 200);
+  }
+});
+document.addEventListener('touchmove', e => { if (drag && drag.started) e.preventDefault(); }, { passive: false });
+document.addEventListener('contextmenu', e => { if (drag) e.preventDefault(); });
+window.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+  if (!drag.started) {
+    if (drag.type === 'mouse') { if (Math.hypot(dx, dy) <= 6 || !startDrag()) return; }
+    else { if (Math.hypot(dx, dy) > 8) { clearTimeout(drag.timer); drag = null; } return; }
+  }
+  e.preventDefault();
+  drag.ghost.style.left = (e.clientX - drag.offX) + 'px';
+  drag.ghost.style.top = (e.clientY - drag.offY) + 'px';
+  const hit = document.elementFromPoint(e.clientX, e.clientY);
+  const day = hit && hit.closest('.day');
+  if (day !== drag.over) { drag.over && drag.over.classList.remove('hover'); day && day.classList.add('hover'); drag.over = day; }
+  // Auto-scroll the page when dragging near the top or just above the tray.
+  const trayTop = $('#tray').getBoundingClientRect().top;
+  if (e.clientY < 90) window.scrollBy(0, -12);
+  else if (e.clientY > trayTop - 30 && e.clientY < trayTop) window.scrollBy(0, 12);
+}, { passive: false });
+function endDrag(drop) {
+  if (!drag) return;
+  clearTimeout(drag.timer);
+  if (drag.started) {
+    drag.ghost.remove(); drag.el.classList.remove('lifted');
+    if (drop && drag.over) addItem(drag.id, drag.over.dataset.day); else render();
+  }
+  drag = null;
+}
+window.addEventListener('pointerup', () => endDrag(true));
+window.addEventListener('pointercancel', () => endDrag(false));
+
+tilesEl.addEventListener('click', e => {
+  if (suppressClick) { suppressClick = false; return; }
+  const t = e.target.closest('.tile[data-tile]');
+  if (t && editMode) { openTile(t.dataset.tile); return; }
+  if (t) { selectedTile = selectedTile === t.dataset.tile ? null : t.dataset.tile; openChip = null; render(); return; }
+  if (e.target.closest('[data-act="new"]')) openTile(null);
+});
+$('#trayHead').addEventListener('click', e => {
+  const a = e.target.closest('[data-act]'); if (!a) return;
+  if (a.dataset.act === 'cancel') { selectedTile = null; render(); }
+  if (a.dataset.act === 'edit') openTile(selectedTile);
+  if (a.dataset.act === 'settings') openSettings();
+  if (a.dataset.act === 'collapse') { collapsed = !collapsed; try { localStorage.setItem('tw:ui:collapsed', collapsed ? '1' : ''); } catch {} render(); }
+  if (a.dataset.act === 'editmode') { editMode = !editMode; selectedTile = null; render(); }
+});
+
+daysEl.addEventListener('click', e => {
+  const rm = e.target.closest('[data-remove]');
+  if (rm) { removeItem(rm.dataset.remove); return; }
+  const chip = e.target.closest('.chip');
+  if (chip && !selectedTile) { openChip = openChip === chip.dataset.item ? null : chip.dataset.item; render(); return; }
+  const day = e.target.closest('.day');
+  if (day && selectedTile) { addItem(selectedTile, day.dataset.day); return; }
+  if (openChip) { openChip = null; render(); }
+});
+
+$('#prevW').onclick = () => { offset--; loadWeek(); };
+$('#nextW').onclick = () => { offset++; loadWeek(); };
+
+/* ---------- dialogs ---------- */
+document.querySelectorAll('dialog').forEach(d => {
+  d.addEventListener('click', e => { if (e.target === d || e.target.closest('[data-close]')) d.close(); });
+});
+
+// Tile editor
+let tileColor = 0, delArmed = false;
+function renderSwatches() {
+  $('#swatches').innerHTML = [0,1,2,3,4,5].map(i => `<button type="button" class="sw cc${i}" data-c="${i}" aria-pressed="${i === tileColor}" aria-label="Colour ${i+1}"></button>`).join('');
+}
+$('#swatches').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (b) { tileColor = +b.dataset.c; renderSwatches(); } });
+function openTile(id) {
+  editingTile = id;
+  const t = lib.tiles.find(x => x.id === id);
+  $('#tileTitle').textContent = t ? 'Edit tile' : 'New tile';
+  $('#tName').value = t ? t.name : '';
+  $('#tPts').value = t ? t.points : 10;
+  $('#tNote').hidden = !t;
+  tileColor = t ? (t.color | 0) : lib.tiles.length % 6;
+  renderSwatches();
+  delArmed = false; const del = $('#tDel'); del.hidden = !t; del.classList.remove('confirm'); del.textContent = 'Delete tile';
+  $('#tileDlg').showModal();
+}
+$('#tileForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('#tName').value.trim(); const points = Math.max(1, Math.min(999, parseInt($('#tPts').value, 10) || 0));
+  if (!name) return;
+  if (editingTile) {
+    const t = { ...lib.tiles.find(x => x.id === editingTile), name, points, color: tileColor };
+    lib.tiles = lib.tiles.map(x => x.id === editingTile ? t : x);
+    applyTileToThisWeek(t);
+  } else lib.tiles = [...lib.tiles, { id: rid(), name, points, color: tileColor }];
+  save('app/library', lib); $('#tileDlg').close(); render();
+  toast(editingTile ? 'Tile updated' : 'Tile added');
+});
+$('#tDel').addEventListener('click', () => {
+  const del = $('#tDel');
+  if (!delArmed) { delArmed = true; del.classList.add('confirm'); del.textContent = 'Tap again to delete'; return; }
+  lib.tiles = lib.tiles.filter(t => t.id !== editingTile);
+  if (selectedTile === editingTile) selectedTile = null;
+  save('app/library', lib); $('#tileDlg').close(); render(); toast('Tile deleted');
+});
+
+// Rewards editor
+let draftRewards = [];
+function renderRewardRows() {
+  $('#rlist').innerHTML = draftRewards.length ? draftRewards.map(r => `<div class="rrow" data-r="${r.id}">
+      <input class="rn" id="rn-${r.id}" aria-label="Reward name" maxlength="50" placeholder="e.g. Massage" value="${esc(r.name)}" autocomplete="off">
+      <label class="plab" for="rp-${r.id}">Points</label>
+      <input class="rp" id="rp-${r.id}" aria-label="Points needed" type="number" inputmode="numeric" min="1" max="9999" value="${r.points || ''}" placeholder="pts">
+      <button class="del" type="button" data-rdel="${r.id}" aria-label="Remove reward">✕</button></div>`).join('')
+    : '<p class="muted">No rewards. Add one below.</p>';
+}
+function readRewardRows() {
+  draftRewards = draftRewards.map(r => ({ id: r.id, name: ($('#rn-' + r.id) || {}).value ?? r.name, points: parseInt(($('#rp-' + r.id) || {}).value, 10) || 0 }));
+}
+$('#rwBtn').onclick = () => { draftRewards = structuredClone(lib.rewards); renderRewardRows(); $('#rwDlg').showModal(); };
+$('#rwAdd').onclick = () => {
+  readRewardRows();
+  const last = draftRewards.reduce((m, r) => Math.max(m, r.points || 0), 0);
+  draftRewards.push({ id: rid(), name: '', points: last ? last + 20 : 20 });
+  renderRewardRows();
+  const n = $('#rn-' + draftRewards[draftRewards.length - 1].id); n && n.focus();
+};
+$('#rlist').addEventListener('click', e => {
+  const b = e.target.closest('[data-rdel]'); if (!b) return;
+  readRewardRows(); draftRewards = draftRewards.filter(r => r.id !== b.dataset.rdel); renderRewardRows();
+});
+$('#rwForm').addEventListener('submit', e => {
+  e.preventDefault();
+  readRewardRows();
+  lib.rewards = draftRewards.map(r => ({ ...r, name: r.name.trim(), points: Math.max(1, Math.min(9999, r.points)) }))
+    .filter(r => r.name).sort((a, b) => a.points - b.points);
+  save('app/library', lib); $('#rwDlg').close(); render(); toast('Rewards saved');
+});
+
+// Settings
+$('#sStart').innerHTML = DAYS_FULL.map((d, i) => `<option value="${i}">${d}</option>`).join('');
+function openSettings() {
+  $('#sStart').value = lib.weekStart;
+  $('#sLimit').value = lib.limit || '';
+  $('#setDlg').showModal();
+}
+$('#setBtn').onclick = openSettings;
+$('#setForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const ws = +$('#sStart').value, changed = ws !== lib.weekStart;
+  lib = { ...lib, weekStart: ws, limit: Math.max(0, parseInt($('#sLimit').value, 10) || 0) };
+  save('app/library', lib); $('#setDlg').close();
+  if (changed) { offset = 0; scrolledFor = null; loadWeek(); } else render();
+  toast('Settings saved');
+});
+
+// History
+$('#histBtn').onclick = async () => {
+  const list = $('#histList'); list.innerHTML = '<p class="muted">Loading…</p>'; $('#histDlg').showModal();
+  let weeks = [];
+  try {
+    if (db) weeks = (await db.collection('weeks').orderBy('start', 'desc').limit(104).get()).docs.map(d => d.data());
+    else weeks = LS.keys().map(k => LS.get(k)).filter(Boolean).sort((a, b) => a.start < b.start ? 1 : -1);
+  } catch { list.innerHTML = '<p class="muted">Couldn’t load history. Try again in a moment.</p>'; return; }
+  weeks = weeks.filter(w => w && w.items && w.items.length);
+  if (!weeks.length) { list.innerHTML = '<p class="muted">Nothing logged yet. Each week you log tiles shows up here.</p>'; return; }
+  list.innerHTML = weeks.map(w => {
+    const s = fromIso(w.start), pts = total(w.items);
+    const got = lib.rewards.filter(r => pts >= r.points).length;
+    return `<div class="h"><div>${fmt(s)} – ${fmt(addDays(s, 6))}<small>${w.items.length} tile${w.items.length === 1 ? '' : 's'}${got ? ` · ${got} reward${got === 1 ? '' : 's'}` : ''}</small></div><b>${pts}</b></div>`;
+  }).join('');
+};
+
+/* ---------- layout: page padding follows the tray's height ---------- */
+const trayEl = $('#tray');
+const syncTray = () => document.documentElement.style.setProperty('--tray-h', trayEl.offsetHeight + 'px');
+if (window.ResizeObserver) new ResizeObserver(syncTray).observe(trayEl); else window.addEventListener('resize', syncTray);
+
+/* ---------- boot ---------- */
+loadWeek();
+(async () => {
+  try { db = window.claude && window.claude.use ? await window.claude.use('db') : null; } catch { db = null; }
+  if (!db) return;
+  try {
+    const snap = await db.doc('app/library').get();
+    if (snap.exists) {
+      const raw = snap.data();
+      lib = normalize(structuredClone(raw)); LS.set('app/library', lib);
+      if (!Array.isArray(raw.rewards)) save('app/library', lib);
+    } else save('app/library', lib);
+  } catch {}
+  db.doc('app/library').onSnapshot(s => {
+    if (!s.exists) return;
+    const prevStart = lib.weekStart;
+    lib = normalize(structuredClone(s.data())); LS.set('app/library', lib);
+    if (lib.weekStart !== prevStart) { offset = 0; scrolledFor = null; loadWeek(); } else render();
+  }, () => {});
+  loadWeek();
+})();
+})();
+</script>
+</body>
+</html>

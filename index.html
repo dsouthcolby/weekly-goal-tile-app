@@ -95,7 +95,15 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .day .dh{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-family:var(--display)}
 .day .dh b{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .day .dh .dn{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin-left:4px}
-.day .dsum{font-family:var(--body);font-variant-numeric:tabular-nums;font-weight:600;font-size:12px;color:var(--muted)}
+.day .dsum{font-family:var(--body);font-variant-numeric:tabular-nums;font-weight:600;font-size:12px;color:var(--muted);white-space:nowrap}
+.day.met .dsum{color:var(--good)}
+.day.over .dsum{color:var(--danger)}
+.dbar{position:relative;height:4px;border-radius:999px;background:var(--surface2);box-shadow:inset 0 0 0 1px var(--line)}
+.dbar i{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:var(--accent)}
+.day.met .dbar i{background:var(--good)}
+.day.over .dbar i{background:var(--danger)}
+.dbar b{position:absolute;top:-2px;bottom:-2px;width:2px;margin-left:-1px;border-radius:1px;background:var(--ink);opacity:.45}
+.dbest{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
 .day.today{border-color:var(--ink)}
 .day.today .dh b{color:var(--accent)}
 .day .chips{display:flex;flex-direction:column;gap:6px;flex:1}
@@ -243,6 +251,7 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
     </div>
     <div class="track" id="track"><i class="fill" style="width:0"></i></div>
     <div class="nextline" id="nextline"></div>
+    <div class="nextline" id="dayline" hidden></div>
     <div class="rewards" id="rewards"></div>
   </section>
 
@@ -294,6 +303,10 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
       <select id="sStart"></select>
       <span class="help">The board clears itself at the start of each week. Past weeks stay in History.</span></div>
     <div class="field"><label for="sLimit">Tile limit per week</label><input id="sLimit" type="number" inputmode="numeric" min="0" max="200" placeholder="No limit"><span class="help">Leave blank for no limit.</span></div>
+    <div class="row2">
+      <div class="field"><label for="sTarget">Daily points target</label><input id="sTarget" type="number" inputmode="numeric" min="0" max="999" placeholder="No target"><span class="help">Days that reach it get a tick.</span></div>
+      <div class="field"><label for="sDayMax">Daily points max</label><input id="sDayMax" type="number" inputmode="numeric" min="0" max="999" placeholder="No max"><span class="help">Days over it turn red. You can still add tiles.</span></div>
+    </div>
     <div class="field" id="acctField" hidden><span class="lab">Account</span>
       <div class="acct"><span class="help" id="acctInfo"></span><button class="btn" id="acctBtn" type="button">Sign out</button></div>
       <span class="help" id="acctNote" hidden></span>
@@ -352,7 +365,7 @@ const rid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 const SEED = {
-  weekStart: 6, limit: 0,
+  weekStart: 6, limit: 0, dayTarget: 0, dayMax: 0,
   rewards: [
     { id: 'r-coffee', name: 'Fancy coffee', points: 20 },
     { id: 'r-bath', name: 'Bath + face mask', points: 40 },
@@ -388,10 +401,12 @@ function normLib(l) {
   delete out.target; delete out.reward;
   out.rewards = [...out.rewards].sort((a, b) => a.points - b.points);
   if (!SORTS[out.sort]) out.sort = 'added';
+  out.dayTarget = Math.max(0, Number(out.dayTarget) || 0);
+  out.dayMax = Math.max(0, Number(out.dayMax) || 0);
   out.updatedAt = Number(l.updatedAt) || 0;
   return out;
 }
-const body = l => ({ tiles: l.tiles, rewards: l.rewards, weekStart: l.weekStart, limit: l.limit, sort: l.sort });
+const body = l => ({ tiles: l.tiles, rewards: l.rewards, weekStart: l.weekStart, limit: l.limit, sort: l.sort, dayTarget: l.dayTarget, dayMax: l.dayMax });
 const libBody = () => body(lib);
 
 // One record per tile placed on a day. Removing a tile marks it deleted so the removal syncs too.
@@ -483,6 +498,14 @@ const weekItems = start => Object.values(P).filter(p => p.week === start && !p.d
 /* ---------- render ---------- */
 const total = items => items.reduce((s, i) => s + (Number(i.points) || 0), 0);
 
+// Under the weekly score: the best day(s) and how many days hit the daily target.
+function renderDayline(ws, dayPts, best) {
+  const el = $('#dayline'), parts = [];
+  if (best.length) parts.push(`Best day: <b>${best.map(i => DAYS_FULL[addDays(ws, i).getDay()]).join(' and ')}</b> · ${dayPts[best[0]]} pts`);
+  if (lib.dayTarget > 0) { const n = dayPts.filter(p => p >= lib.dayTarget).length; parts.push(`${n} of 7 days hit your ${lib.dayTarget} pt target`); }
+  if (lib.dayMax > 0) { const n = dayPts.filter(p => p > lib.dayMax).length; if (n) parts.push(`${n} day${n === 1 ? '' : 's'} over the ${lib.dayMax} pt max`); }
+  el.innerHTML = parts.join(' · '); el.hidden = !parts.length;
+}
 function renderScore(items) {
   const pts = total(items), count = items.length;
   $('#pts').innerHTML = `${pts}<span>pts</span>`;
@@ -515,14 +538,22 @@ function render() {
   renderScore(items);
 
   const today = iso(new Date());
+  const dayPts = [0, 1, 2, 3, 4, 5, 6].map(i => total(items.filter(x => x.day === i)));
+  const top = Math.max(...dayPts), best = top > 0 ? dayPts.flatMap((p, i) => p === top ? [i] : []) : [];
+  renderDayline(ws, dayPts, best);
   const days = $('#days'); days.innerHTML = '';
   for (let i = 0; i < 7; i++) {
     const d = addDays(ws, i);
-    const dayItems = items.filter(x => x.day === i);
+    const dayItems = items.filter(x => x.day === i), pts = dayPts[i];
+    const met = lib.dayTarget > 0 && pts >= lib.dayTarget, over = lib.dayMax > 0 && pts > lib.dayMax;
     const el = document.createElement('div');
-    el.className = 'day' + (iso(d) === today ? ' today' : '') + (selectedTile ? ' armed' : '');
+    el.className = 'day' + (iso(d) === today ? ' today' : '') + (selectedTile ? ' armed' : '') + (met ? ' met' : '') + (over ? ' over' : '');
     el.dataset.day = i;
-    el.innerHTML = `<div class="dh"><span><b>${DAYS[d.getDay()]}</b><span class="dn">${d.getDate()}</span></span><span class="dsum">${dayItems.length ? total(dayItems) + ' pts' : ''}</span></div>
+    // "20 / 30 pts" against the daily max, or against the target when there's no max.
+    const cap = lib.dayMax || lib.dayTarget;
+    const sum = cap ? `${met ? '✓ ' : ''}${pts} / ${cap} pts` : dayItems.length ? `${pts} pts` : '';
+    const bar = cap ? `<div class="dbar" aria-hidden="true"><i style="width:${Math.min(100, pts / cap * 100)}%"></i>${lib.dayMax && lib.dayTarget && lib.dayTarget < lib.dayMax ? `<b style="left:${lib.dayTarget / lib.dayMax * 100}%"></b>` : ''}</div>` : '';
+    el.innerHTML = `<div class="dh"><span><b>${DAYS[d.getDay()]}</b><span class="dn">${d.getDate()}</span></span><span class="dsum">${sum}</span></div>${bar}${best.includes(i) ? '<span class="dbest">Best day</span>' : ''}
       <div class="chips">${dayItems.length ? dayItems.map(x => `<button type="button" class="chip cc${x.color|0}${openChip === x.id ? ' open' : ''}" data-item="${esc(x.id)}"><span class="n">${esc(x.name)}</span><span class="p">+${x.points}</span><span class="x" data-remove="${esc(x.id)}" aria-label="Remove">✕</span></button>`).join('') : `<span class="empty">${selectedTile ? 'Tap to add' : 'Drop a tile here'}</span>`}</div>`;
     days.appendChild(el);
   }
@@ -558,14 +589,19 @@ function addItem(tileId, day) {
   const t = lib.tiles.find(x => x.id === tileId); if (!t) return;
   if (weekFull()) { toast(`Weekly limit reached (${lib.limit} tiles)`); return; }
   const before = total(weekItems(curStart));
+  const dayBefore = total(weekItems(curStart).filter(x => x.day === Number(day)));
   const now = Date.now();
   const item = np({ id: rid(), week: curStart, day, tileId: t.id, name: t.name, points: t.points, color: t.color, createdAt: now, updatedAt: now });
   P[item.id] = item; dirty.p[item.id] = 1;
   changed();
   const chip = document.querySelector(`[data-item="${item.id}"]`); if (chip) chip.classList.add('pop');
   const after = before + item.points;
+  const dayAfter = dayBefore + item.points, dayName = DAYS_FULL[addDays(fromIso(curStart), Number(day)).getDay()];
   const unlocked = lib.rewards.filter(r => before < r.points && after >= r.points);
-  toast(unlocked.length ? `Unlocked: ${unlocked.map(r => r.name).join(', ')}` : `+${item.points} · ${t.name} on ${DAYS_FULL[addDays(fromIso(curStart), Number(day)).getDay()]}`);
+  toast(unlocked.length ? `Unlocked: ${unlocked.map(r => r.name).join(', ')}`
+    : lib.dayMax > 0 && dayAfter > lib.dayMax ? `${dayName} is over your daily max: ${dayAfter} / ${lib.dayMax} pts`
+    : lib.dayTarget > 0 && dayBefore < lib.dayTarget && dayAfter >= lib.dayTarget ? `Daily target reached on ${dayName}`
+    : `+${item.points} · ${t.name} on ${dayName}`);
 }
 function removeItem(id) {
   const p = P[id]; if (!p) return;
@@ -1043,6 +1079,8 @@ function renderAccount() {
 function openSettings() {
   $('#sStart').value = lib.weekStart;
   $('#sLimit').value = lib.limit || '';
+  $('#sTarget').value = lib.dayTarget || '';
+  $('#sDayMax').value = lib.dayMax || '';
   renderAccount();
   $('#setDlg').showModal();
 }
@@ -1064,7 +1102,8 @@ $('#acctBtn').onclick = async () => {
 $('#setForm').addEventListener('submit', e => {
   e.preventDefault();
   const ws = +$('#sStart').value, moved = ws !== lib.weekStart;
-  lib = { ...lib, weekStart: ws, limit: Math.max(0, parseInt($('#sLimit').value, 10) || 0) };
+  const num = (id, max) => Math.max(0, Math.min(max, parseInt($(id).value, 10) || 0));
+  lib = { ...lib, weekStart: ws, limit: num('#sLimit', 200), dayTarget: num('#sTarget', 999), dayMax: num('#sDayMax', 999) };
   if (moved) { offset = 0; setCur(); }
   $('#setDlg').close(); saveLib();
   toast('Settings saved');

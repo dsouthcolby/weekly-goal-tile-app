@@ -147,10 +147,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .tile.lifted{opacity:.35}
 .tile.add{background:transparent;border:1.5px dashed var(--line);color:var(--muted);align-items:center;justify-content:center;text-align:center;font-weight:600;font-size:13px;gap:4px}
 .tile.add .plus{font-size:28px;line-height:1;font-weight:400}
-.tgroup{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding-top:4px;font-size:12px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
-.tgroup:first-child{padding-top:0}
-.tgroup .dot{width:14px;height:14px;border-radius:5px;flex:none}
-.tgroup::after{content:"";flex:1;height:1px;background:var(--line)}
 /* The visible label is plain text; a transparent native select on top opens the system picker.
    The select keeps a 16px font so iPhone doesn't zoom in when it opens. */
 .sortbtn{position:relative;display:inline-flex;align-items:center}
@@ -377,6 +373,7 @@ function sortedTiles() {
   const t = [...lib.tiles];
   if (lib.sort === 'points-desc') t.sort((a, b) => b.points - a.points || byName(a, b));
   if (lib.sort === 'points-asc') t.sort((a, b) => a.points - b.points || byName(a, b));
+  // Colours in the colour picker's order, all in one grid.
   if (lib.sort === 'color') t.sort((a, b) => (a.color | 0) - (b.color | 0) || b.points - a.points || byName(a, b));
   return t;
 }
@@ -550,16 +547,7 @@ function renderTray(count) {
   else if (full) head.innerHTML = `<span class="hint">Weekly limit reached (${lib.limit} tiles)</span><span class="btns"><button class="link" data-act="settings" type="button">Change limit</button>${sortBtn}${editBtn}${hideBtn}</span>`;
   else head.innerHTML = `<span class="hint">${dragHint}</span><span class="btns">${sortBtn}${editBtn}${hideBtn}</span>`;
   const tileBtn = t => `<button type="button" class="tile cc${t.color|0}${t.id === selectedTile ? ' selected' : ''}" data-tile="${esc(t.id)}"><span class="pen">Edit</span><span class="tn">${esc(t.name)}</span><span class="tp">${t.points}<small>pts</small></span></button>`;
-  const tiles = sortedTiles();
-  let html = '';
-  if (lib.sort === 'color') {
-    // One labelled row per colour, in the colour picker's order.
-    for (let c = 0; c < 6; c++) {
-      const group = tiles.filter(t => (t.color | 0) === c);
-      if (group.length) html += `<div class="tgroup"><span class="dot cc${c}" role="img" aria-label="Colour ${c + 1}"></span>${group.length} tile${group.length === 1 ? '' : 's'}</div>` + group.map(tileBtn).join('');
-    }
-  } else html = tiles.map(tileBtn).join('');
-  $('#tiles').innerHTML = html + `<button type="button" class="tile add" data-act="new"><span class="plus">+</span>New tile</button>`;
+  $('#tiles').innerHTML = sortedTiles().map(tileBtn).join('') + `<button type="button" class="tile add" data-act="new"><span class="plus">+</span>New tile</button>`;
 }
 
 /* ---------- actions ---------- */

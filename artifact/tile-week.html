@@ -3,27 +3,29 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap">
 <style>
 :root{
-  --bg:#EDEFF6; --surface:#FFFFFF; --surface2:#F6F7FB; --ink:#171A33; --muted:#5D6285; --line:#D8DBE8;
-  --accent:#3144D0; --accent-ink:#FFFFFF; --accent-soft:#E1E5FF; --good:#1D7F55; --good-soft:#D6F2E3; --danger:#C2362B;
-  --c0:#FFD6C7; --c1:#FCE59E; --c2:#C9EDD3; --c3:#CDE1FF; --c4:#E2D4FF; --c5:#FFD0E4; --cink:#171A33;
-  --shadow:0 10px 30px rgba(23,26,51,.18); --tray-h:230px;
+  /* Earth tones: linen ground, walnut accent, moss for "reached", brick for "over". */
+  --bg:#EFE9DF; --surface:#FBF8F3; --surface2:#F4EFE6; --ink:#2B2620; --muted:#6B6155; --line:#DDD3C4;
+  --accent:#6F4E37; --accent-ink:#FFFFFF; --accent-soft:#EADFD2; --good:#46693A; --good-soft:#DFE8D5; --danger:#A8382C;
+  /* Tiles: terracotta, ochre, sage, river stone, dusty heather, wheat. */
+  --c0:#E4AE92; --c1:#E6C685; --c2:#BFCDA3; --c3:#BFC8C6; --c4:#CDB5B8; --c5:#E6D7BC; --cink:#2B2620;
+  --shadow:0 10px 30px rgba(43,38,32,.18); --tray-h:230px;
   --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
   --body:"Figtree", -apple-system, "Segoe UI", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     color-scheme:dark;
-    --bg:#10121D; --surface:#1A1D2C; --surface2:#222638; --ink:#ECEEF8; --muted:#9CA1C0; --line:#2D3149;
-    --accent:#8190FF; --accent-ink:#0D1030; --accent-soft:#262C58; --good:#5FD39D; --good-soft:#173A2B; --danger:#FF7B6E;
-    --c0:#5B3024; --c1:#574516; --c2:#1F4A30; --c3:#1F3A63; --c4:#3C2D66; --c5:#5A2440; --cink:#F2F3FA;
+    --bg:#1B1814; --surface:#25211C; --surface2:#2E2923; --ink:#EFE8DD; --muted:#A89D8E; --line:#3B352D;
+    --accent:#D1AB86; --accent-ink:#1B1814; --accent-soft:#3A2F25; --good:#93B881; --good-soft:#26311F; --danger:#E5806F;
+    --c0:#6B3F2C; --c1:#6A5424; --c2:#3F4D2E; --c3:#37403F; --c4:#4B3A3E; --c5:#5A4C36; --cink:#F3ECE2;
     --shadow:0 10px 30px rgba(0,0,0,.5);
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#10121D; --surface:#1A1D2C; --surface2:#222638; --ink:#ECEEF8; --muted:#9CA1C0; --line:#2D3149;
-  --accent:#8190FF; --accent-ink:#0D1030; --accent-soft:#262C58; --good:#5FD39D; --good-soft:#173A2B; --danger:#FF7B6E;
-  --c0:#5B3024; --c1:#574516; --c2:#1F4A30; --c3:#1F3A63; --c4:#3C2D66; --c5:#5A2440; --cink:#F2F3FA;
+  --bg:#1B1814; --surface:#25211C; --surface2:#2E2923; --ink:#EFE8DD; --muted:#A89D8E; --line:#3B352D;
+  --accent:#D1AB86; --accent-ink:#1B1814; --accent-soft:#3A2F25; --good:#93B881; --good-soft:#26311F; --danger:#E5806F;
+  --c0:#6B3F2C; --c1:#6A5424; --c2:#3F4D2E; --c3:#37403F; --c4:#4B3A3E; --c5:#5A4C36; --cink:#F3ECE2;
   --shadow:0 10px 30px rgba(0,0,0,.5);
 }
 *,*::before,*::after{box-sizing:border-box}
@@ -147,7 +149,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 
 /* Sheets */
 dialog{border:0;padding:0;background:transparent;max-width:none;max-height:none;width:100%;height:100%;margin:0}
-dialog::backdrop{background:rgba(10,12,25,.45)}
+dialog::backdrop{background:rgba(27,24,20,.45)}
 .sheet{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;background:var(--surface);color:var(--ink);border-radius:22px 22px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom, 0px));display:grid;gap:14px;max-height:88%;overflow-y:auto}
 .sheet h2{margin:0;font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.01em}
 .field{display:grid;gap:6px}

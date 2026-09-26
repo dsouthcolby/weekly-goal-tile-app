@@ -1,7 +1,7 @@
 // Keeps Tile Week opening with no signal. The app's files are served from this cache first and
 // refreshed in the background, so a new version shows up the next time the app is opened.
 // Requests to Supabase are never cached.
-const CACHE = 'tile-week-v1';
+const CACHE = 'tile-week-v2';
 const SHELL = ['./', './index.html', './supabase.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

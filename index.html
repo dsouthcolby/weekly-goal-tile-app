@@ -283,6 +283,7 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
     <div class="field"><label for="tPts">Points</label><input id="tPts" type="number" inputmode="numeric" min="1" max="999" value="10" required></div>
     <div class="field"><span class="lab">Colour</span><div class="swatches" id="swatches"></div></div>
     <p class="help" id="tNote">Changes also apply to this tile wherever it’s placed this week. Past weeks keep their original values.</p>
+    <p class="err" id="tErr" role="alert" hidden></p>
     <div class="actions">
       <button class="btn danger" id="tDel" type="button">Delete tile</button>
       <div class="right">
@@ -522,7 +523,7 @@ function renderDayline(ws, dayPts, best) {
   el.innerHTML = parts.join(' · '); el.hidden = !parts.length;
 }
 function renderScore(items) {
-  const bal = balance(), earned = total(items), count = items.length;
+  const bal = Math.max(0, balance()), earned = total(items), count = items.length;
   $('#pts').innerHTML = `${bal}<span>pts</span>`;
   $('#meta').innerHTML = `<span><b>${earned} pts</b> earned this week</span><span><b>${count}</b> tile${count === 1 ? '' : 's'}${lib.limit ? ` of <b>${lib.limit}</b>` : ''}</span>`;
   const rws = lib.rewards;
@@ -540,7 +541,7 @@ function buy(id) {
   const p = np({ id: rid(), kind: 'buy', week: iso(weekStartDate(0)), day: (new Date().getDay() - lib.weekStart + 7) % 7, tileId: r.id, name: r.name, points: r.points, createdAt: now, updatedAt: now });
   P[p.id] = p; dirty.p[p.id] = 1;
   changed();
-  toast(`Bought ${r.name} · ${balance()} pts left`);
+  toast(`Bought ${r.name} · ${Math.max(0, balance())} pts left`);
 }
 $('#rewards').addEventListener('click', e => { const b = e.target.closest('[data-buy]'); if (b && !b.disabled) buy(b.dataset.buy); });
 
@@ -620,6 +621,12 @@ function addItem(tileId, day) {
 }
 function removeItem(id) {
   const p = P[id]; if (!p) return;
+  // The balance never goes below zero: points already spent on treats can't be taken back.
+  const bal = balance();
+  if (bal - p.points < 0) {
+    toast(`You've already spent these points. Undo a purchase in History to remove ${p.name}.`);
+    openChip = null; render(); return;
+  }
   P[id] = { ...p, deleted: true, updatedAt: Math.max(Date.now(), p.updatedAt + 1) }; dirty.p[id] = 1;
   openChip = null; changed();
 }
@@ -1021,18 +1028,25 @@ function openTile(id) {
   $('#tileTitle').textContent = t ? 'Edit tile' : 'New tile';
   $('#tName').value = t ? t.name : '';
   $('#tPts').value = t ? t.points : 10;
-  $('#tNote').hidden = !t;
+  $('#tNote').hidden = !t; showTileErr('');
   tileColor = t ? (t.color | 0) : lib.tiles.length % 6;
   renderSwatches();
   delArmed = false; const del = $('#tDel'); del.hidden = !t; del.classList.remove('confirm'); del.textContent = 'Delete tile';
   $('#tileDlg').showModal();
 }
+function showTileErr(msg) { const el = $('#tErr'); el.textContent = msg; el.hidden = !msg; }
 $('#tileForm').addEventListener('submit', e => {
   e.preventDefault();
   const name = $('#tName').value.trim(); const points = Math.max(1, Math.min(999, parseInt($('#tPts').value, 10) || 0));
   if (!name) return;
   if (editingTile) {
-    const t = { ...lib.tiles.find(x => x.id === editingTile), name, points, color: tileColor };
+    const old = lib.tiles.find(x => x.id === editingTile);
+    // Lowering the points also lowers this week's placements of the tile; don't let that go below zero.
+    const start = iso(weekStartDate(0));
+    const placed = Object.values(P).filter(p => p.week === start && !p.deleted && p.kind === 'tile' && p.tileId === editingTile).length;
+    const after = balance() + placed * (points - old.points);
+    if (after < 0) { showTileErr(`That would leave you with ${after} pts, because this week’s ${old.name} tiles would be worth less and you’ve already spent those points. The lowest you can set it to now is ${Math.max(1, points - Math.floor(after / placed))}.`); return; }
+    const t = { ...old, name, points, color: tileColor };
     lib.tiles = lib.tiles.map(x => x.id === editingTile ? t : x);
     applyTileToThisWeek(t);
   } else lib.tiles = [...lib.tiles, { id: rid(), name, points, color: tileColor }];
@@ -1137,7 +1151,7 @@ function renderHistory() {
       + (buys.length ? `<div class="hbuys">${buys.map(b => `<div class="hbuy"><span>${esc(b.name)} · −${b.points} pts</span>${w === thisWeek ? `<button class="link" type="button" data-undo="${esc(b.id)}">Undo</button>` : ''}</div>`).join('')}</div>` : '')
       + `</div>`;
   }).join('') : '<p class="muted">Nothing logged yet. Each week you log tiles or buy treats shows up here.</p>';
-  $('#histBal').textContent = `${balance()} pts to spend`;
+  $('#histBal').textContent = `${Math.max(0, balance())} pts to spend`;
 }
 $('#histList').addEventListener('click', e => {
   const u = e.target.closest('[data-undo]'); if (!u) return;

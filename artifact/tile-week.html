@@ -56,19 +56,23 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .weeknav .range small{display:block;color:var(--muted);font-weight:500;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
 
 /* Score + rewards */
-.score{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;gap:14px}
-.score-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.score{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:16px;align-items:start}
+.bal{display:grid;gap:2px;align-content:start}
+.bal .meta,.bal .nextline{margin-top:8px}
 .pts{font-family:var(--display);font-weight:500;font-size:44px;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
 .pts span{font-size:16px;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:4px}
-.meta{text-align:right;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;display:grid;gap:2px;justify-items:end}
+.meta{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;display:grid;gap:2px}
+.meta:empty{display:none}
 .meta b{color:var(--ink);font-weight:500}
 .ptslab{font-size:13px;font-weight:500;color:var(--muted);margin-top:6px}
 .ptsnote{font-size:12px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
-.menu{display:grid;border-top:1px solid var(--line);padding-top:12px;gap:2px}
-.menu-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.menu{display:grid;border-left:1px solid var(--line);padding-left:16px;gap:2px;align-content:start}
+@media (max-width:339px){ .score{grid-template-columns:1fr} .menu{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:12px} }
+.menu-head{display:flex;align-items:center;justify-content:space-between;gap:8px;white-space:nowrap}
+.menu-head .link{padding-right:0}
 .menu-head .lab{font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .treats{display:flex;flex-wrap:wrap;gap:8px;padding-top:4px}
-.treat{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface2);color:var(--muted);font-weight:500;font-size:14px;transition:background .2s,color .2s,border-color .2s}
+.treat{display:inline-flex;align-items:center;gap:7px;min-height:36px;max-width:100%;text-align:left;line-height:1.2;padding:5px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface2);color:var(--muted);font-weight:500;font-size:13.5px;transition:background .2s,color .2s,border-color .2s}
 .treat .tpr{font-variant-numeric:tabular-nums;font-weight:500;font-size:12px;opacity:.85}
 .treat.ready{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .menu .nextline{padding-top:8px}
@@ -236,13 +240,15 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
   </div>
 
   <section class="score" aria-live="polite">
-    <div class="score-row">
-      <div><div class="pts" id="pts">0<span>pts</span></div><div class="ptslab">to spend</div><div class="ptsnote" id="ptsnote" hidden></div></div>
+    <div class="bal">
+      <div class="pts" id="pts">0<span>pts</span></div>
+      <div class="ptslab">to spend</div>
+      <div class="ptsnote" id="ptsnote" hidden></div>
       <div class="meta" id="meta"></div>
+      <div class="nextline" id="dayline" hidden></div>
     </div>
-    <div class="nextline" id="dayline" hidden></div>
     <div class="menu">
-      <div class="menu-head"><span class="lab">Treat menu</span><button class="link" id="rwBtn" type="button">Edit menu</button></div>
+      <div class="menu-head"><span class="lab">Treats</span><button class="link" id="rwBtn" type="button" aria-label="Edit treat menu">Edit</button></div>
       <div class="treats" id="rewards"></div>
       <div class="nextline" id="nextline"></div>
     </div>
@@ -533,7 +539,7 @@ function renderScore(items) {
   const rws = lib.rewards;
   // Each treat is a button: muted until you can afford it, filled when it's ready to buy.
   $('#rewards').innerHTML = rws.map(r => { const ok = bal >= r.points; return `<button class="treat${ok ? ' ready' : ''}" type="button" data-buy="${esc(r.id)}" aria-label="${ok ? `Buy ${esc(r.name)} for ${r.points} points` : `${esc(r.name)}, ${r.points} points, ${r.points - bal} more needed`}"><span>${esc(r.name)}</span><span class="tpr">${r.points}</span></button>`; }).join('');
-  $('#nextline').innerHTML = rws.length ? '' : 'No treats on the menu yet. Tap <b>Edit menu</b> to add some.';
+  $('#nextline').innerHTML = rws.length ? '' : 'No treats on the menu yet. Tap <b>Edit</b> to add some.';
   $('#nextline').hidden = !!rws.length;
 }
 function buy(id) {

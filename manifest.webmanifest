@@ -1,6 +1,6 @@
 {
-  "name": "Tile Week",
-  "short_name": "Tile Week",
+  "name": "Weekly Tracker",
+  "short_name": "Weekly Tracker",
   "description": "A weekly reward board: drag point-valued goal tiles onto days and climb a ladder of rewards.",
   "start_url": "./",
   "scope": "./",

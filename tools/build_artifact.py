@@ -1,4 +1,4 @@
-"""Build the claude.ai artifact version of Tile Week from index.html.
+"""Build the claude.ai artifact version of Weekly Tracker from index.html.
 
 The artifact is the same app. claude.ai wraps the page in its own document, so this keeps only
 the parts of index.html marked with <!-- artifact:head --> and <!-- artifact:body -->.

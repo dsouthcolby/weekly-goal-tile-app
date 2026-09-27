@@ -1,4 +1,4 @@
-<title>Tile Week</title>
+<title>Weekly Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Nunito:wght@400;500;600&display=swap">
 <style>
@@ -223,7 +223,7 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 <div class="wrap">
   <div class="top">
     <div class="brandcol">
-      <div class="brand">Tile Week</div>
+      <div class="brand">Weekly Tracker</div>
       <button class="sync" id="syncBtn" type="button" data-state="local">Saved on this device</button>
     </div>
     <div class="top-actions">
@@ -327,7 +327,7 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 
 <div class="auth" id="auth" hidden>
   <form class="auth-card" id="authForm" novalidate>
-    <h1 id="aTitle">Tile Week</h1>
+    <h1 id="aTitle">Weekly Tracker</h1>
     <p class="help" id="aLead">Sign in to keep your board in sync across your devices.</p>
     <div class="field" id="aEmailField"><label for="aEmail">Email</label><input id="aEmail" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" required></div>
     <div class="field" id="aPassField"><label for="aPass">Password</label><input id="aPass" type="password" autocomplete="current-password" required><span class="help" id="aPassHelp" hidden>At least 8 characters.</span></div>
@@ -865,7 +865,7 @@ function startCloud(u) {
 let authMode = 'signin', recoveryUser = null;
 const appUrl = () => location.origin + location.pathname;
 const AUTH = {
-  signin:  { title: 'Tile Week', lead: 'Sign in to keep your board in sync across your devices.', submit: 'Sign in', mode: 'Create an account', pass: 'current-password' },
+  signin:  { title: 'Weekly Tracker', lead: 'Sign in to keep your board in sync across your devices.', submit: 'Sign in', mode: 'Create an account', pass: 'current-password' },
   signup:  { title: 'Create your account', lead: 'Use your email and a password. You’ll use them to sign in on each of your devices.', submit: 'Create account', mode: 'I already have an account', pass: 'new-password' },
   forgot:  { title: 'Reset your password', lead: 'Enter your email and we’ll send you a link to set a new password.', submit: 'Email me a link', mode: 'Back to sign in' },
   newpass: { title: 'Set a new password', lead: 'Choose a new password for your account.', submit: 'Save password', pass: 'new-password' },

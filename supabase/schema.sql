@@ -1,4 +1,4 @@
--- Tile Week database for Supabase.
+-- Weekly Tracker database for Supabase.
 -- Run once: Supabase dashboard > SQL Editor > New query > paste this file > Run.
 -- Safe to run again; it only creates what is missing and replaces the rules.
 

@@ -92,6 +92,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .hbuy{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}
 .hbuy span{font-variant-numeric:tabular-nums}
 .hbuy .link{padding:2px 6px}
+.hist .h [data-goto]{padding:6px 0 0}
 .hist .h{flex-wrap:wrap}
 .hist .h > div{flex:1;min-width:0}
 .nextline{font-size:13px;color:var(--muted)}
@@ -489,8 +490,22 @@ function mergeLib(r) {
   if (JSON.stringify(libBody()) === JSON.stringify(body(r))) return false;
   const moved = r.weekStart !== lib.weekStart;
   lib = r;
-  if (moved) { offset = 0; setCur(); }
+  if (moved) { offset = 0; setCur(); alignWeeks(); }
   return true;
+}
+// Records are filed under the first day of their week. If "Week starts on" changes, older records
+// would sit under a different start day and vanish from the board. Refile them by their real date.
+function alignWeeks() {
+  let moved = 0;
+  for (const p of Object.values(P)) {
+    const start = fromIso(p.week);
+    if (isNaN(start) || start.getDay() === lib.weekStart) continue;
+    const date = addDays(start, p.day), day = (date.getDay() - lib.weekStart + 7) % 7;
+    P[p.id] = { ...p, week: iso(addDays(date, -day)), day, updatedAt: Math.max(Date.now(), p.updatedAt + 1) };
+    dirty.p[p.id] = 1; moved++;
+  }
+  if (moved) persist();
+  return moved;
 }
 
 /* ---------- state ---------- */
@@ -525,7 +540,13 @@ function renderDayline(ws, dayPts, best) {
 function renderScore(items) {
   const bal = Math.max(0, balance()), earned = total(items), count = items.length;
   $('#pts').innerHTML = `${bal}<span>pts</span>`;
-  $('#meta').innerHTML = `<span><b>${earned} pts</b> earned this week</span><span><b>${count}</b> tile${count === 1 ? '' : 's'}${lib.limit ? ` of <b>${lib.limit}</b>` : ''}</span>`;
+  // Show how the balance adds up: this week + other weeks − spent.
+  const all = Object.values(P).filter(p => !p.deleted);
+  const other = total(all.filter(p => p.kind === 'tile' && p.week !== curStart)), spent = total(all.filter(p => p.kind === 'buy'));
+  $('#meta').innerHTML = `<span><b>${earned} pts</b> earned this week</span>`
+    + (other ? `<span><b>+${other} pts</b> from other weeks</span>` : '')
+    + (spent ? `<span><b>−${spent} pts</b> spent</span>` : '')
+    + `<span><b>${count}</b> tile${count === 1 ? '' : 's'}${lib.limit ? ` of <b>${lib.limit}</b>` : ''}</span>`;
   const rws = lib.rewards;
   $('#rewards').innerHTML = rws.map(r => `<div class="mi"><span class="mn">${esc(r.name)}</span><span class="mp">${r.points} pts</span><button class="buy" type="button" data-buy="${esc(r.id)}"${bal >= r.points ? '' : ' disabled'} aria-label="Buy ${esc(r.name)} for ${r.points} points">Buy</button></div>`).join('');
   const next = rws.find(r => bal < r.points);
@@ -723,7 +744,13 @@ async function claudeAdapter() {
       weeks.onSnapshot(q => {
         let ch = false;
         const seen = new Set();
-        for (const d of q.docs) for (const r of (d.data().items || [])) { seen.add(r.id); ch = mergePlacement({ ...r, week: d.id }) || ch; }
+        for (const d of q.docs) for (const r of (d.data().items || [])) {
+          const l = P[r.id];
+          // An older copy left behind in the week a record was moved out of.
+          if (l && l.week !== d.id && l.updatedAt >= (Number(r.updatedAt) || 0)) continue;
+          seen.add(r.id); ch = mergePlacement({ ...r, week: d.id }) || ch;
+        }
+        if (alignWeeks()) ch = true;
         // Tiles are never taken out of a week document, so one missing from it was overwritten by
         // another device saving at the same moment. Send it again.
         if (!q.metadata.fromCache) for (const id in P) if (!seen.has(id)) dirty.p[id] = 1;
@@ -816,6 +843,7 @@ function supabaseAdapter(uid) {
         if (rows.length < 1000) break;
       }
       if (max) LS.set('cursor', new Date(max).toISOString());
+      if (alignWeeks()) ch = true;
       if (ch) render();
       if (pending()) queueSync();
     },
@@ -1133,7 +1161,7 @@ $('#setForm').addEventListener('submit', e => {
   const ws = +$('#sStart').value, moved = ws !== lib.weekStart;
   const num = (id, max) => Math.max(0, Math.min(max, parseInt($(id).value, 10) || 0));
   lib = { ...lib, weekStart: ws, limit: num('#sLimit', 200), dayTarget: num('#sTarget', 999), dayMax: num('#sDayMax', 999) };
-  if (moved) { offset = 0; setCur(); }
+  if (moved) { offset = 0; setCur(); alignWeeks(); }
   $('#setDlg').close(); saveLib();
   toast('Settings saved');
 });
@@ -1147,13 +1175,18 @@ function renderHistory() {
   list.innerHTML = weeks.length ? weeks.map(w => {
     const s = fromIso(w), tiles = byWeek[w].filter(p => p.kind === 'tile'), buys = byWeek[w].filter(p => p.kind === 'buy').sort((a, b) => a.createdAt - b.createdAt);
     const earned = total(tiles);
-    return `<div class="h"><div>${fmt(s)} – ${fmt(addDays(s, 6))}<small>${tiles.length} tile${tiles.length === 1 ? '' : 's'} · ${buys.length ? `${buys.length} treat${buys.length === 1 ? '' : 's'} bought` : 'nothing bought'}</small></div><b>+${earned}</b>`
+    const names = {}; for (const t of tiles) names[t.name] = (names[t.name] || 0) + 1;
+    const list = Object.entries(names).map(([n, c]) => esc(n) + (c > 1 ? ` ×${c}` : '')).join(', ');
+    const weeksAway = Math.round((s - weekStartDate(0)) / 864e5 / 7);
+    return `<div class="h"><div>${fmt(s)} – ${fmt(addDays(s, 6))}${w === thisWeek ? ' · this week' : ''}<small>${tiles.length} tile${tiles.length === 1 ? '' : 's'} · ${buys.length ? `${buys.length} treat${buys.length === 1 ? '' : 's'} bought` : 'nothing bought'}</small>${list ? `<small>${list}</small>` : ''}${tiles.length ? `<button class="link" type="button" data-goto="${weeksAway}">Show on board</button>` : ''}</div><b>+${earned}</b>`
       + (buys.length ? `<div class="hbuys">${buys.map(b => `<div class="hbuy"><span>${esc(b.name)} · −${b.points} pts</span>${w === thisWeek ? `<button class="link" type="button" data-undo="${esc(b.id)}">Undo</button>` : ''}</div>`).join('')}</div>` : '')
       + `</div>`;
   }).join('') : '<p class="muted">Nothing logged yet. Each week you log tiles or buy treats shows up here.</p>';
   $('#histBal').textContent = `${Math.max(0, balance())} pts to spend`;
 }
 $('#histList').addEventListener('click', e => {
+  const g = e.target.closest('[data-goto]');
+  if (g) { offset = Number(g.dataset.goto) || 0; openChip = null; setCur(); render(); $('#histDlg').close(); window.scrollTo(0, 0); return; }
   const u = e.target.closest('[data-undo]'); if (!u) return;
   const p = P[u.dataset.undo]; if (!p || p.deleted) return;
   P[p.id] = { ...p, deleted: true, updatedAt: Math.max(Date.now(), p.updatedAt + 1) }; dirty.p[p.id] = 1;
@@ -1167,6 +1200,7 @@ const syncTray = () => document.documentElement.style.setProperty('--tray-h', tr
 if (window.ResizeObserver) new ResizeObserver(syncTray).observe(trayEl); else window.addEventListener('resize', syncTray);
 
 /* ---------- boot ---------- */
+alignWeeks();
 setCur(); render();
 if (IN_CLAUDE) {
   claudeAdapter().then(a => { if (!a) return; adapter = a; a.start(); render(); syncNow(); }).catch(() => {});

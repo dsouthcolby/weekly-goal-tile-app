@@ -79,10 +79,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .meta{text-align:right;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;display:grid;gap:2px;justify-items:end}
 .meta b{color:var(--ink);font-weight:600}
 .ptslab{font-size:13px;font-weight:600;color:var(--muted);margin-top:6px}
+.ptsnote{font-size:12px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
 .menu{display:grid;border-top:1px solid var(--line);padding-top:12px;gap:2px}
 .menu-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .menu-head .lab{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.mi{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.mi{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:6px 0}
 .mi .mn{font-weight:600;overflow-wrap:anywhere}
 .mi .mp{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;font-weight:600;white-space:nowrap}
 .buy{border:0;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:13px;padding:0 16px;min-height:36px}
@@ -256,7 +257,7 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 
   <section class="score" aria-live="polite">
     <div class="score-row">
-      <div><div class="pts" id="pts">0<span>pts</span></div><div class="ptslab">to spend</div></div>
+      <div><div class="pts" id="pts">0<span>pts</span></div><div class="ptslab">to spend</div><div class="ptsnote" id="ptsnote" hidden></div></div>
       <div class="meta" id="meta"></div>
     </div>
     <div class="nextline" id="dayline" hidden></div>
@@ -529,10 +530,9 @@ const balance = () => Object.values(P).reduce((s, p) => p.deleted ? s : s + (p.k
 /* ---------- render ---------- */
 const total = items => items.reduce((s, i) => s + (Number(i.points) || 0), 0);
 
-// Under the weekly score: the best day(s) and how many days hit the daily target.
+// Under the weekly score: how many days hit the daily target or went over the max.
 function renderDayline(ws, dayPts, best) {
   const el = $('#dayline'), parts = [];
-  if (best.length) parts.push(`Best day: <b>${best.map(i => DAYS_FULL[addDays(ws, i).getDay()]).join(' and ')}</b> · ${dayPts[best[0]]} pts`);
   if (lib.dayTarget > 0) { const n = dayPts.filter(p => p >= lib.dayTarget).length; parts.push(`${n} of 7 days hit your ${lib.dayTarget} pt target`); }
   if (lib.dayMax > 0) { const n = dayPts.filter(p => p > lib.dayMax).length; if (n) parts.push(`${n} day${n === 1 ? '' : 's'} over the ${lib.dayMax} pt max`); }
   el.innerHTML = parts.join(' · '); el.hidden = !parts.length;
@@ -543,16 +543,17 @@ function renderScore(items) {
   // Show how the balance adds up: this week + other weeks − spent.
   const all = Object.values(P).filter(p => !p.deleted);
   const other = total(all.filter(p => p.kind === 'tile' && p.week !== curStart)), spent = total(all.filter(p => p.kind === 'buy'));
-  $('#meta').innerHTML = `<span><b>${earned} pts</b> earned this week</span>`
-    + (other ? `<span><b>+${other} pts</b> from other weeks</span>` : '')
-    + (spent ? `<span><b>−${spent} pts</b> spent</span>` : '')
-    + `<span><b>${count}</b> tile${count === 1 ? '' : 's'}${lib.limit ? ` of <b>${lib.limit}</b>` : ''}</span>`;
+  // When the balance isn't simply this week's points, spell out how it adds up under it;
+  // that line already includes this week's points, so they aren't repeated on the right.
+  const note = $('#ptsnote');
+  note.textContent = other || spent ? `${earned} this week` + (other ? ` + ${other} other weeks` : '') + (spent ? ` − ${spent} spent` : '') : '';
+  note.hidden = !note.textContent;
+  $('#meta').innerHTML = (note.hidden ? `<span><b>${earned} pts</b> earned this week</span>` : '')
+    + (lib.limit ? `<span><b>${count}</b> of <b>${lib.limit}</b> tiles</span>` : '');
   const rws = lib.rewards;
-  $('#rewards').innerHTML = rws.map(r => `<div class="mi"><span class="mn">${esc(r.name)}</span><span class="mp">${r.points} pts</span><button class="buy" type="button" data-buy="${esc(r.id)}"${bal >= r.points ? '' : ' disabled'} aria-label="Buy ${esc(r.name)} for ${r.points} points">Buy</button></div>`).join('');
-  const next = rws.find(r => bal < r.points);
-  $('#nextline').innerHTML = !rws.length ? 'No treats on the menu yet. Tap <b>Edit menu</b> to add some.'
-    : next ? `<b>${next.points - bal} pts</b> more for ${esc(next.name)}`
-    : 'You can afford everything on the menu';
+  $('#rewards').innerHTML = rws.map(r => `<div class="mi"><span class="mn">${esc(r.name)}</span><span class="mp">${r.points} pts</span><button class="buy" type="button" data-buy="${esc(r.id)}"${bal >= r.points ? '' : ' disabled'} aria-label="${bal >= r.points ? `Buy ${esc(r.name)} for ${r.points} points` : `${r.points - bal} more points needed for ${esc(r.name)}`}">${bal >= r.points ? 'Buy' : `${r.points - bal} more`}</button></div>`).join('');
+  $('#nextline').innerHTML = rws.length ? '' : 'No treats on the menu yet. Tap <b>Edit menu</b> to add some.';
+  $('#nextline').hidden = !!rws.length;
 }
 function buy(id) {
   const r = lib.rewards.find(x => x.id === id); if (!r) return;
@@ -588,10 +589,10 @@ function render() {
     el.dataset.day = i;
     // "20 / 30 pts" against the daily max, or against the target when there's no max.
     const cap = lib.dayMax || lib.dayTarget;
-    const sum = cap ? `${met ? '✓ ' : ''}${pts} / ${cap} pts` : dayItems.length ? `${pts} pts` : '';
-    const bar = cap ? `<div class="dbar" aria-hidden="true"><i style="width:${Math.min(100, pts / cap * 100)}%"></i>${lib.dayMax && lib.dayTarget && lib.dayTarget < lib.dayMax ? `<b style="left:${lib.dayTarget / lib.dayMax * 100}%"></b>` : ''}</div>` : '';
+    const sum = !pts ? '' : cap ? `${met ? '✓ ' : ''}${pts} / ${cap} pts` : `${pts} pts`;
+    const bar = cap && pts ? `<div class="dbar" aria-hidden="true"><i style="width:${Math.min(100, pts / cap * 100)}%"></i>${lib.dayMax && lib.dayTarget && lib.dayTarget < lib.dayMax ? `<b style="left:${lib.dayTarget / lib.dayMax * 100}%"></b>` : ''}</div>` : '';
     el.innerHTML = `<div class="dh"><span><b>${DAYS[d.getDay()]}</b><span class="dn">${d.getDate()}</span></span><span class="dsum">${sum}</span></div>${bar}${best.includes(i) ? '<span class="dbest">Best day</span>' : ''}
-      <div class="chips">${dayItems.length ? dayItems.map(x => `<button type="button" class="chip cc${x.color|0}${openChip === x.id ? ' open' : ''}" data-item="${esc(x.id)}"><span class="n">${esc(x.name)}</span><span class="p">+${x.points}</span><span class="x" data-remove="${esc(x.id)}" aria-label="Remove">✕</span></button>`).join('') : `<span class="empty">${selectedTile ? 'Tap to add' : 'Drop a tile here'}</span>`}</div>`;
+      <div class="chips">${dayItems.length ? dayItems.map(x => `<button type="button" class="chip cc${x.color|0}${openChip === x.id ? ' open' : ''}" data-item="${esc(x.id)}"><span class="n">${esc(x.name)}</span><span class="p">+${x.points}</span><span class="x" data-remove="${esc(x.id)}" aria-label="Remove">✕</span></button>`).join('') : selectedTile ? '<span class="empty">Tap to add</span>' : ''}</div>`;
     days.appendChild(el);
   }
   renderTray(items.length);
@@ -608,12 +609,11 @@ function renderTray(count) {
   const editBtn = `<button class="link${editMode ? ' on' : ''}" data-act="editmode" type="button">${editMode ? 'Done editing' : 'Edit tiles'}</button>`;
   const hideBtn = `<button class="link" data-act="collapse" type="button" aria-expanded="${!collapsed}">${collapsed ? 'Show tiles ▴' : 'Hide ▾'}</button>`;
   const sortBtn = `<label class="link sortbtn"><span>Sort: ${SORTS[lib.sort]}</span><select id="sortSel" aria-label="Sort tiles">${Object.entries(SORTS).map(([k, v]) => `<option value="${k}"${k === lib.sort ? ' selected' : ''}>${v}</option>`).join('')}</select></label>`;
-  const dragHint = coarse ? 'Hold a tile, then drag it onto a day. Or tap it.' : 'Drag a tile onto a day, or click it.';
   if (collapsed) head.innerHTML = `<span class="hint">${lib.tiles.length} tiles</span><span class="btns">${hideBtn}</span>`;
   else if (editMode) head.innerHTML = `<span class="hint">Tap a tile to change its name, points or colour</span><span class="btns">${editBtn}</span>`;
   else if (sel) head.innerHTML = `<span class="hint">Tap a day to add <b>${esc(sel.name)}</b></span><span class="btns"><button class="link" data-act="edit" type="button">Edit</button><button class="link" data-act="cancel" type="button">Done</button></span>`;
   else if (full) head.innerHTML = `<span class="hint">Weekly limit reached (${lib.limit} tiles)</span><span class="btns"><button class="link" data-act="settings" type="button">Change limit</button>${sortBtn}${editBtn}${hideBtn}</span>`;
-  else head.innerHTML = `<span class="hint">${dragHint}</span><span class="btns">${sortBtn}${editBtn}${hideBtn}</span>`;
+  else head.innerHTML = `<span class="hint"></span><span class="btns">${sortBtn}${editBtn}${hideBtn}</span>`;
   const tileBtn = t => `<button type="button" class="tile cc${t.color|0}${t.id === selectedTile ? ' selected' : ''}" data-tile="${esc(t.id)}"><span class="pen">Edit</span><span class="tn">${esc(t.name)}</span><span class="tp">${t.points}<small>pts</small></span></button>`;
   $('#tiles').innerHTML = sortedTiles().map(tileBtn).join('') + `<button type="button" class="tile add" data-act="new"><span class="plus">+</span>New tile</button>`;
 }
@@ -705,6 +705,8 @@ function renderSync() {
     readonly: 'View only · changes stay in this browser',
   }[syncState];
   b.textContent = text;
+  // Only shown when there's something to know or do: unsynced changes, offline, sign-in, an error.
+  b.hidden = syncState === 'ok' && !n || syncState === 'busy' && !n || syncState === 'local' && !(CLOUD && !acct);
   b.dataset.state = syncState === 'ok' && n ? 'busy' : syncState === 'readonly' ? 'local' : syncState;
 }
 $('#syncBtn').onclick = () => {
@@ -946,7 +948,6 @@ $('#authForm').addEventListener('submit', async e => {
 let drag = null, suppressClick = false;
 const tilesEl = $('#tiles'), daysEl = $('#days');
 
-const coarse = window.matchMedia && matchMedia('(pointer: coarse)').matches;
 let collapsed = false; try { collapsed = localStorage.getItem('tw:ui:collapsed') === '1'; } catch {}
 
 function startDrag() {

@@ -10,10 +10,12 @@ create table if not exists public.libraries (
   synced_at  timestamptz not null default now()  -- when the server last saved it
 );
 
--- One row per tile placed on a day. Removing a tile sets deleted = true so the removal syncs.
+-- One row per tile placed on a day, or per treat bought (kind = 'buy', tile_id = the treat's id).
+-- Removing one sets deleted = true so the removal syncs.
 create table if not exists public.placements (
   user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
   id         text not null,
+  kind       text not null default 'tile' check (kind in ('tile', 'buy')),  -- a placed tile, or a treat bought
   week       date not null,                      -- first day of the week the tile is in
   day        smallint not null check (day between 0 and 6),
   tile_id    text not null default '',
@@ -26,6 +28,8 @@ create table if not exists public.placements (
   synced_at  timestamptz not null default now(),
   primary key (user_id, id)
 );
+-- For databases created before treats could be bought.
+alter table public.placements add column if not exists kind text not null default 'tile' check (kind in ('tile', 'buy'));
 create index if not exists placements_user_synced on public.placements (user_id, synced_at);
 
 -- When two devices save the same record, keep the newer edit. Also stamp the server time,

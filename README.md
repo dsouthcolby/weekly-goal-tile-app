@@ -1,6 +1,6 @@
 # Tile Week
 
-Tile Week is a weekly reward board. You make goal tiles, each worth a number of points (for example "Pilates, 15 pts"), and drag them onto the days of the week when you do them. As your weekly total grows you climb a ladder of rewards you set yourself, such as "Fancy coffee at 20 pts" or "New leggings at 70 pts". The board resets at the start of each week, and past weeks stay in History.
+Tile Week is a weekly reward board. You make goal tiles, each worth a number of points (for example "Pilates, 15 pts"), and drag them onto the days of the week when you do them. The points you earn go into a balance you spend on a treat menu you set yourself, such as "Fancy coffee, 20 pts" or "New leggings, 70 pts". Points you don't spend carry over. The board clears at the start of each week, and History keeps past weeks and what you bought, with Undo for this week's purchases.
 
 Each person signs in with their email and a password and gets their own board, synced across their devices. It keeps working with no signal and syncs when the connection comes back.
 

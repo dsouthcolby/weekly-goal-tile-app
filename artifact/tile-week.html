@@ -59,15 +59,22 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .pts span{font-size:16px;font-weight:600;color:var(--muted);letter-spacing:0;margin-left:4px}
 .meta{text-align:right;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;display:grid;gap:2px;justify-items:end}
 .meta b{color:var(--ink);font-weight:600}
-.track{position:relative;height:12px;background:var(--surface2);border-radius:999px;border:1px solid var(--line);margin-inline:6px}
-.track i.fill{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:999px;transition:width .35s ease}
-.track .mk{position:absolute;top:50%;width:14px;height:14px;margin-left:-7px;margin-top:-7px;border-radius:50%;background:var(--surface);border:2px solid var(--muted)}
-.track .mk.got{background:var(--good);border-color:var(--good)}
-.rewards{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.rw{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:13px;font-weight:600;border:1px solid var(--line);color:var(--muted);font-variant-numeric:tabular-nums}
-.rw .v{font-weight:500;opacity:.8}
-.rw.got{background:var(--good-soft);color:var(--good);border-color:transparent}
-.rw.next{color:var(--ink);border-color:var(--ink)}
+.ptslab{font-size:13px;font-weight:600;color:var(--muted);margin-top:6px}
+.menu{display:grid;border-top:1px solid var(--line);padding-top:12px;gap:2px}
+.menu-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.menu-head .lab{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.mi{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.mi .mn{font-weight:600;overflow-wrap:anywhere}
+.mi .mp{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;font-weight:600;white-space:nowrap}
+.buy{border:0;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:13px;padding:0 16px;min-height:36px}
+.buy:disabled{background:var(--surface2);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line);cursor:default}
+.menu .nextline{padding-top:8px}
+.hbuys{display:grid;gap:4px;margin-top:8px}
+.hbuy{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}
+.hbuy span{font-variant-numeric:tabular-nums}
+.hbuy .link{padding:2px 6px}
+.hist .h{flex-wrap:wrap}
+.hist .h > div{flex:1;min-width:0}
 .nextline{font-size:13px;color:var(--muted)}
 .nextline b{color:var(--ink)}
 
@@ -226,13 +233,15 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 
   <section class="score" aria-live="polite">
     <div class="score-row">
-      <div class="pts" id="pts">0<span>pts</span></div>
-      <div class="meta"><span id="meta"></span><button class="link" id="rwBtn" type="button">Edit rewards</button></div>
+      <div><div class="pts" id="pts">0<span>pts</span></div><div class="ptslab">to spend</div></div>
+      <div class="meta" id="meta"></div>
     </div>
-    <div class="track" id="track"><i class="fill" style="width:0"></i></div>
-    <div class="nextline" id="nextline"></div>
     <div class="nextline" id="dayline" hidden></div>
-    <div class="rewards" id="rewards"></div>
+    <div class="menu">
+      <div class="menu-head"><span class="lab">Treat menu</span><button class="link" id="rwBtn" type="button">Edit menu</button></div>
+      <div id="rewards"></div>
+      <div class="nextline" id="nextline"></div>
+    </div>
   </section>
 
   <div class="days" id="days"></div>
@@ -264,11 +273,11 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 
 <dialog id="rwDlg">
   <form class="sheet" id="rwForm" method="dialog">
-    <h2>Rewards</h2>
-    <p class="help">Earn points during the week to unlock each reward. Points reset when a new week starts.</p>
-    <div class="rhead"><span>Reward</span><span>Points</span><span></span></div>
+    <h2>Treat menu</h2>
+    <p class="help">Spend the points you earn on these treats. Points you don’t spend carry over to next week.</p>
+    <div class="rhead"><span>Treat</span><span>Price</span><span></span></div>
     <div class="rlist" id="rlist"></div>
-    <button class="btn ghostbtn" id="rwAdd" type="button">+ Add reward</button>
+    <button class="btn ghostbtn" id="rwAdd" type="button">+ Add treat</button>
     <div class="actions"><div class="right">
       <button class="btn" type="button" data-close>Cancel</button>
       <button class="btn primary" type="submit">Save</button>
@@ -301,6 +310,7 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 <dialog id="histDlg">
   <div class="sheet">
     <h2>History</h2>
+    <p class="help" id="histBal"></p>
     <div class="hist" id="histList"></div>
     <div class="actions"><div class="right"><button class="btn" type="button" data-close>Close</button></div></div>
   </div>
@@ -389,9 +399,10 @@ function normLib(l) {
 const body = l => ({ tiles: l.tiles, rewards: l.rewards, weekStart: l.weekStart, limit: l.limit, sort: l.sort, dayTarget: l.dayTarget, dayMax: l.dayMax });
 const libBody = () => body(lib);
 
-// One record per tile placed on a day. Removing a tile marks it deleted so the removal syncs too.
+// One record per tile placed on a day, or per treat bought (kind 'buy', tileId = the treat's id).
+// Removing one marks it deleted so the removal syncs too.
 const np = x => ({
-  id: String(x.id), week: String(x.week), day: Number(x.day) || 0, tileId: String(x.tileId || ''),
+  id: String(x.id), kind: x.kind === 'buy' ? 'buy' : 'tile', week: String(x.week), day: Number(x.day) || 0, tileId: String(x.tileId || ''),
   name: String(x.name || ''), points: Number(x.points) || 0, color: Number(x.color) | 0,
   deleted: !!x.deleted, createdAt: Number(x.createdAt) || 0, updatedAt: Number(x.updatedAt) || 0,
 });
@@ -473,7 +484,9 @@ function weekStartDate(off) {
 }
 const setCur = () => { curStart = iso(weekStartDate(offset)); };
 const fmt = d => `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
-const weekItems = start => Object.values(P).filter(p => p.week === start && !p.deleted).sort((a, b) => a.createdAt - b.createdAt);
+const weekItems = start => Object.values(P).filter(p => p.week === start && !p.deleted && p.kind === 'tile').sort((a, b) => a.createdAt - b.createdAt);
+// Points to spend: everything earned, minus everything bought. Carries over from week to week.
+const balance = () => Object.values(P).reduce((s, p) => p.deleted ? s : s + (p.kind === 'buy' ? -p.points : p.points), 0);
 
 /* ---------- render ---------- */
 const total = items => items.reduce((s, i) => s + (Number(i.points) || 0), 0);
@@ -487,27 +500,27 @@ function renderDayline(ws, dayPts, best) {
   el.innerHTML = parts.join(' · '); el.hidden = !parts.length;
 }
 function renderScore(items) {
-  const pts = total(items), count = items.length;
-  $('#pts').innerHTML = `${pts}<span>pts</span>`;
-  $('#meta').innerHTML = `<b>${count}</b> tile${count === 1 ? '' : 's'}` + (lib.limit ? ` of <b>${lib.limit}</b>` : '') + ` this week`;
+  const bal = balance(), earned = total(items), count = items.length;
+  $('#pts').innerHTML = `${bal}<span>pts</span>`;
+  $('#meta').innerHTML = `<span><b>${earned} pts</b> earned this week</span><span><b>${count}</b> tile${count === 1 ? '' : 's'}${lib.limit ? ` of <b>${lib.limit}</b>` : ''}</span>`;
   const rws = lib.rewards;
-  const track = $('#track');
-  if (!rws.length) {
-    track.hidden = true; $('#rewards').innerHTML = '';
-    $('#nextline').innerHTML = 'No rewards yet. Tap <b>Edit rewards</b> to add some.';
-    return;
-  }
-  track.hidden = false;
-  const max = Math.max(...rws.map(r => r.points), 1);
-  track.innerHTML = `<i class="fill" style="width:${Math.min(100, pts / max * 100)}%"></i>` +
-    rws.map(r => `<span class="mk${pts >= r.points ? ' got' : ''}" style="left:${r.points / max * 100}%" title="${esc(r.name)}"></span>`).join('');
-  const next = rws.find(r => pts < r.points);
-  const got = rws.filter(r => pts >= r.points).length;
-  $('#nextline').innerHTML = next
-    ? `<b>${next.points - pts} pts</b> to ${esc(next.name)}` + (got ? ` · ${got} unlocked` : '')
-    : `<b>All ${rws.length} rewards unlocked</b> this week`;
-  $('#rewards').innerHTML = rws.map(r => `<span class="rw${pts >= r.points ? ' got' : r === next ? ' next' : ''}">${pts >= r.points ? '✓ ' : ''}${esc(r.name)} <span class="v">${r.points}</span></span>`).join('');
+  $('#rewards').innerHTML = rws.map(r => `<div class="mi"><span class="mn">${esc(r.name)}</span><span class="mp">${r.points} pts</span><button class="buy" type="button" data-buy="${esc(r.id)}"${bal >= r.points ? '' : ' disabled'} aria-label="Buy ${esc(r.name)} for ${r.points} points">Buy</button></div>`).join('');
+  const next = rws.find(r => bal < r.points);
+  $('#nextline').innerHTML = !rws.length ? 'No treats on the menu yet. Tap <b>Edit menu</b> to add some.'
+    : next ? `<b>${next.points - bal} pts</b> more for ${esc(next.name)}`
+    : 'You can afford everything on the menu';
 }
+function buy(id) {
+  const r = lib.rewards.find(x => x.id === id); if (!r) return;
+  const bal = balance();
+  if (bal < r.points) { toast(`You need ${r.points - bal} more pts for ${r.name}`); return; }
+  const now = Date.now();
+  const p = np({ id: rid(), kind: 'buy', week: iso(weekStartDate(0)), day: (new Date().getDay() - lib.weekStart + 7) % 7, tileId: r.id, name: r.name, points: r.points, createdAt: now, updatedAt: now });
+  P[p.id] = p; dirty.p[p.id] = 1;
+  changed();
+  toast(`Bought ${r.name} · ${balance()} pts left`);
+}
+$('#rewards').addEventListener('click', e => { const b = e.target.closest('[data-buy]'); if (b && !b.disabled) buy(b.dataset.buy); });
 
 function render() {
   if (!curStart) setCur();
@@ -568,7 +581,7 @@ const weekFull = () => lib.limit > 0 && weekItems(curStart).length >= lib.limit;
 function addItem(tileId, day) {
   const t = lib.tiles.find(x => x.id === tileId); if (!t) return;
   if (weekFull()) { toast(`Weekly limit reached (${lib.limit} tiles)`); return; }
-  const before = total(weekItems(curStart));
+  const before = balance();
   const dayBefore = total(weekItems(curStart).filter(x => x.day === Number(day)));
   const now = Date.now();
   const item = np({ id: rid(), week: curStart, day, tileId: t.id, name: t.name, points: t.points, color: t.color, createdAt: now, updatedAt: now });
@@ -578,7 +591,7 @@ function addItem(tileId, day) {
   const after = before + item.points;
   const dayAfter = dayBefore + item.points, dayName = DAYS_FULL[addDays(fromIso(curStart), Number(day)).getDay()];
   const unlocked = lib.rewards.filter(r => before < r.points && after >= r.points);
-  toast(unlocked.length ? `Unlocked: ${unlocked.map(r => r.name).join(', ')}`
+  toast(unlocked.length ? `You can now afford ${unlocked.map(r => r.name).join(', ')}`
     : lib.dayMax > 0 && dayAfter > lib.dayMax ? `${dayName} is over your daily max: ${dayAfter} / ${lib.dayMax} pts`
     : lib.dayTarget > 0 && dayBefore < lib.dayTarget && dayAfter >= lib.dayTarget ? `Daily target reached on ${dayName}`
     : `+${item.points} · ${t.name} on ${dayName}`);
@@ -600,7 +613,7 @@ function toast(msg) {
 function applyTileToThisWeek(t) {
   const start = iso(weekStartDate(0)), now = Date.now();
   for (const p of Object.values(P)) {
-    if (p.week !== start || p.deleted || p.tileId !== t.id) continue;
+    if (p.week !== start || p.deleted || p.kind !== 'tile' || p.tileId !== t.id) continue;
     P[p.id] = { ...p, name: t.name, points: t.points, color: t.color, updatedAt: Math.max(now, p.updatedAt + 1) };
     dirty.p[p.id] = 1;
   }
@@ -733,8 +746,8 @@ function syncError(err) {
   return e;
 }
 function supabaseAdapter(uid) {
-  const row = p => ({ user_id: uid, id: p.id, week: p.week, day: p.day, tile_id: p.tileId, name: p.name, points: p.points, color: p.color, deleted: p.deleted, created_at: p.createdAt, updated_at: p.updatedAt });
-  const fromRow = r => np({ id: r.id, week: r.week, day: r.day, tileId: r.tile_id, name: r.name, points: r.points, color: r.color, deleted: r.deleted, createdAt: r.created_at, updatedAt: r.updated_at });
+  const row = p => ({ user_id: uid, id: p.id, kind: p.kind, week: p.week, day: p.day, tile_id: p.tileId, name: p.name, points: p.points, color: p.color, deleted: p.deleted, created_at: p.createdAt, updated_at: p.updatedAt });
+  const fromRow = r => np({ id: r.id, kind: r.kind, week: r.week, day: r.day, tileId: r.tile_id, name: r.name, points: r.points, color: r.color, deleted: r.deleted, createdAt: r.created_at, updatedAt: r.updated_at });
   const check = res => { if (res.error) throw syncError(res.error); return res.data; };
   async function session() {
     if (navigator.onLine === false) throw Object.assign(new Error('offline'), { offline: true });
@@ -1016,11 +1029,11 @@ $('#tDel').addEventListener('click', () => {
 let draftRewards = [];
 function renderRewardRows() {
   $('#rlist').innerHTML = draftRewards.length ? draftRewards.map(r => `<div class="rrow" data-r="${r.id}">
-      <input class="rn" id="rn-${r.id}" aria-label="Reward name" maxlength="50" placeholder="e.g. Massage" value="${esc(r.name)}" autocomplete="off">
-      <label class="plab" for="rp-${r.id}">Points</label>
-      <input class="rp" id="rp-${r.id}" aria-label="Points needed" type="number" inputmode="numeric" min="1" max="9999" value="${r.points || ''}" placeholder="pts">
-      <button class="del" type="button" data-rdel="${r.id}" aria-label="Remove reward">✕</button></div>`).join('')
-    : '<p class="muted">No rewards. Add one below.</p>';
+      <input class="rn" id="rn-${r.id}" aria-label="Treat name" maxlength="50" placeholder="e.g. Massage" value="${esc(r.name)}" autocomplete="off">
+      <label class="plab" for="rp-${r.id}">Price</label>
+      <input class="rp" id="rp-${r.id}" aria-label="Price in points" type="number" inputmode="numeric" min="1" max="9999" value="${r.points || ''}" placeholder="pts">
+      <button class="del" type="button" data-rdel="${r.id}" aria-label="Remove treat">✕</button></div>`).join('')
+    : '<p class="muted">No treats yet. Add one below.</p>';
 }
 function readRewardRows() {
   draftRewards = draftRewards.map(r => ({ id: r.id, name: ($('#rn-' + r.id) || {}).value ?? r.name, points: parseInt(($('#rp-' + r.id) || {}).value, 10) || 0 }));
@@ -1042,7 +1055,7 @@ $('#rwForm').addEventListener('submit', e => {
   readRewardRows();
   lib.rewards = draftRewards.map(r => ({ ...r, name: r.name.trim(), points: Math.max(1, Math.min(9999, r.points)) }))
     .filter(r => r.name).sort((a, b) => a.points - b.points);
-  $('#rwDlg').close(); saveLib(); toast('Rewards saved');
+  $('#rwDlg').close(); saveLib(); toast('Menu saved');
 });
 
 // Settings
@@ -1090,18 +1103,27 @@ $('#setForm').addEventListener('submit', e => {
 });
 
 // History
-$('#histBtn').onclick = () => {
-  const list = $('#histList');
+function renderHistory() {
+  const list = $('#histList'), thisWeek = iso(weekStartDate(0));
   const byWeek = {};
   for (const p of Object.values(P)) if (!p.deleted) (byWeek[p.week] ||= []).push(p);
   const weeks = Object.keys(byWeek).sort().reverse();
   list.innerHTML = weeks.length ? weeks.map(w => {
-    const s = fromIso(w), items = byWeek[w], pts = total(items);
-    const got = lib.rewards.filter(r => pts >= r.points).length;
-    return `<div class="h"><div>${fmt(s)} – ${fmt(addDays(s, 6))}<small>${items.length} tile${items.length === 1 ? '' : 's'}${got ? ` · ${got} reward${got === 1 ? '' : 's'}` : ''}</small></div><b>${pts}</b></div>`;
-  }).join('') : '<p class="muted">Nothing logged yet. Each week you log tiles shows up here.</p>';
-  $('#histDlg').showModal();
-};
+    const s = fromIso(w), tiles = byWeek[w].filter(p => p.kind === 'tile'), buys = byWeek[w].filter(p => p.kind === 'buy').sort((a, b) => a.createdAt - b.createdAt);
+    const earned = total(tiles);
+    return `<div class="h"><div>${fmt(s)} – ${fmt(addDays(s, 6))}<small>${tiles.length} tile${tiles.length === 1 ? '' : 's'} · ${buys.length ? `${buys.length} treat${buys.length === 1 ? '' : 's'} bought` : 'nothing bought'}</small></div><b>+${earned}</b>`
+      + (buys.length ? `<div class="hbuys">${buys.map(b => `<div class="hbuy"><span>${esc(b.name)} · −${b.points} pts</span>${w === thisWeek ? `<button class="link" type="button" data-undo="${esc(b.id)}">Undo</button>` : ''}</div>`).join('')}</div>` : '')
+      + `</div>`;
+  }).join('') : '<p class="muted">Nothing logged yet. Each week you log tiles or buy treats shows up here.</p>';
+  $('#histBal').textContent = `${balance()} pts to spend`;
+}
+$('#histList').addEventListener('click', e => {
+  const u = e.target.closest('[data-undo]'); if (!u) return;
+  const p = P[u.dataset.undo]; if (!p || p.deleted) return;
+  P[p.id] = { ...p, deleted: true, updatedAt: Math.max(Date.now(), p.updatedAt + 1) }; dirty.p[p.id] = 1;
+  changed(); renderHistory(); toast(`Undid ${p.name} · ${p.points} pts back`);
+});
+$('#histBtn').onclick = () => { renderHistory(); $('#histDlg').showModal(); };
 
 /* ---------- layout: page padding follows the tray's height ---------- */
 const trayEl = $('#tray');

@@ -46,6 +46,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .sync[data-state="busy"]::before,.sync[data-state="offline"]::before{background:var(--accent)}
 .sync[data-state="auth"],.sync[data-state="error"]{color:var(--danger)}
 .sync[data-state="auth"]::before,.sync[data-state="error"]::before{background:var(--danger)}
+.hlink{border:0;background:none;padding:8px 4px;font-size:14px;font-weight:600;color:var(--muted)}
+.hlink:hover{color:var(--ink)}
 .iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;height:36px;min-width:36px;padding:0 12px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .top-actions{display:flex;gap:8px}
 .weeknav{display:flex;align-items:center;gap:8px;margin-top:14px;max-width:520px;margin-inline:auto}
@@ -95,7 +97,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .day.met .dbar i{background:var(--good)}
 .day.over .dbar i{background:var(--danger)}
 .dbar b{position:absolute;top:-2px;bottom:-2px;width:2px;margin-left:-1px;border-radius:1px;background:var(--ink);opacity:.45}
-.dbest{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.day.blank{background:var(--surface2);border-color:transparent}
 .day.today{border-color:var(--ink)}
 .day.today .dh b{color:var(--accent)}
 .day .chips{display:flex;flex-direction:column;gap:6px;flex:1}
@@ -104,10 +106,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .day.hover{border-style:solid;border-color:var(--accent);background:var(--accent-soft);transform:scale(1.02)}
 .chip{display:flex;align-items:center;justify-content:space-between;gap:6px;border:0;border-radius:9px;padding:6px 8px;font-size:13px;font-weight:600;color:var(--cink);text-align:left;width:100%}
 .chip .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.chip .p{font-variant-numeric:tabular-nums;opacity:.75;font-weight:500;flex:none}
+.chip .p{display:none;font-variant-numeric:tabular-nums;opacity:.75;font-weight:500;flex:none}
 .chip .x{display:none;flex:none;background:var(--ink);color:var(--bg);border-radius:6px;padding:0 6px;font-size:12px}
 .chip.open .x{display:inline-block}
-.chip.open .p{display:none}
+.chip.open .p{display:inline}
 .chip.pop{animation:pop .35s ease}
 @media (max-width:899px){ .days{grid-template-columns:repeat(4,minmax(0,1fr))} .day{min-height:150px} }
 @media (max-width:579px){ .days{grid-template-columns:repeat(2,minmax(0,1fr))} .day{min-height:112px} }
@@ -222,8 +224,8 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
       <button class="sync" id="syncBtn" type="button" data-state="local">Saved on this device</button>
     </div>
     <div class="top-actions">
-      <button class="iconbtn" id="histBtn" type="button">History</button>
-      <button class="iconbtn" id="setBtn" type="button">Settings</button>
+      <button class="hlink" id="histBtn" type="button">History</button>
+      <button class="hlink" id="setBtn" type="button">Settings</button>
     </div>
   </div>
 
@@ -509,7 +511,7 @@ const balance = () => Object.values(P).reduce((s, p) => p.deleted ? s : s + (p.k
 const total = items => items.reduce((s, i) => s + (Number(i.points) || 0), 0);
 
 // Under the weekly score: how many days hit the daily target or went over the max.
-function renderDayline(ws, dayPts, best) {
+function renderDayline(dayPts) {
   const el = $('#dayline'), parts = [];
   if (lib.dayTarget > 0) { const n = dayPts.filter(p => p >= lib.dayTarget).length; parts.push(`${n} of 7 days hit your ${lib.dayTarget} pt target`); }
   if (lib.dayMax > 0) { const n = dayPts.filter(p => p > lib.dayMax).length; if (n) parts.push(`${n} day${n === 1 ? '' : 's'} over the ${lib.dayMax} pt max`); }
@@ -550,26 +552,26 @@ function render() {
   const items = weekItems(curStart);
   const ws = fromIso(curStart), we = addDays(ws, 6);
   $('#wRange').textContent = `${fmt(ws)} – ${fmt(we)}`;
-  $('#wLabel').textContent = offset === 0 ? 'This week' : offset === -1 ? 'Last week' : offset === 1 ? 'Next week' : (offset < 0 ? `${-offset} weeks ago` : `In ${offset} weeks`);
+  $('#wLabel').hidden = offset === 0;
+  $('#wLabel').textContent = offset === 0 ? '' : offset === -1 ? 'Last week' : offset === 1 ? 'Next week' : (offset < 0 ? `${-offset} weeks ago` : `In ${offset} weeks`);
   renderScore(items);
 
   const today = iso(new Date());
   const dayPts = [0, 1, 2, 3, 4, 5, 6].map(i => total(items.filter(x => x.day === i)));
-  const top = Math.max(...dayPts), best = top > 0 ? dayPts.flatMap((p, i) => p === top ? [i] : []) : [];
-  renderDayline(ws, dayPts, best);
+  renderDayline(dayPts);
   const days = $('#days'); days.innerHTML = '';
   for (let i = 0; i < 7; i++) {
     const d = addDays(ws, i);
     const dayItems = items.filter(x => x.day === i), pts = dayPts[i];
     const met = lib.dayTarget > 0 && pts >= lib.dayTarget, over = lib.dayMax > 0 && pts > lib.dayMax;
     const el = document.createElement('div');
-    el.className = 'day' + (iso(d) === today ? ' today' : '') + (selectedTile ? ' armed' : '') + (met ? ' met' : '') + (over ? ' over' : '');
+    el.className = 'day' + (iso(d) === today ? ' today' : '') + (selectedTile ? ' armed' : '') + (met ? ' met' : '') + (over ? ' over' : '') + (dayItems.length ? '' : ' blank');
     el.dataset.day = i;
     // "20 / 30 pts" against the daily max, or against the target when there's no max.
     const cap = lib.dayMax || lib.dayTarget;
     const sum = !pts ? '' : cap ? `${met ? '✓ ' : ''}${pts} / ${cap} pts` : `${pts} pts`;
     const bar = cap && pts ? `<div class="dbar" aria-hidden="true"><i style="width:${Math.min(100, pts / cap * 100)}%"></i>${lib.dayMax && lib.dayTarget && lib.dayTarget < lib.dayMax ? `<b style="left:${lib.dayTarget / lib.dayMax * 100}%"></b>` : ''}</div>` : '';
-    el.innerHTML = `<div class="dh"><span><b>${DAYS[d.getDay()]}</b><span class="dn">${d.getDate()}</span></span><span class="dsum">${sum}</span></div>${bar}${best.includes(i) ? '<span class="dbest">Best day</span>' : ''}
+    el.innerHTML = `<div class="dh"><span><b>${DAYS[d.getDay()]}</b><span class="dn">${d.getDate()}</span></span><span class="dsum">${sum}</span></div>${bar}
       <div class="chips">${dayItems.length ? dayItems.map(x => `<button type="button" class="chip cc${x.color|0}${openChip === x.id ? ' open' : ''}" data-item="${esc(x.id)}"><span class="n">${esc(x.name)}</span><span class="p">+${x.points}</span><span class="x" data-remove="${esc(x.id)}" aria-label="Remove">✕</span></button>`).join('') : selectedTile ? '<span class="empty">Tap to add</span>' : ''}</div>`;
     days.appendChild(el);
   }

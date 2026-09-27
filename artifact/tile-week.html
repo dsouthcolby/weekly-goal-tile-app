@@ -67,8 +67,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .ptslab{font-size:13px;font-weight:500;color:var(--muted);margin-top:6px}
 .ptsnote{font-size:12px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
 .menu{display:grid;gap:2px;align-content:start}
-@media (max-width:339px){ .score{grid-template-columns:1fr} }
-.treats{display:flex;flex-wrap:wrap;gap:8px}
+@media (max-width:339px){ .score{grid-template-columns:1fr} .treats{justify-content:flex-start} }
+.treats{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
 .treats-list{display:contents}
 .treat.edit{background:transparent;border-style:dashed;color:var(--muted)}
 .treat{display:inline-flex;align-items:center;gap:7px;min-height:36px;max-width:100%;text-align:left;line-height:1.2;padding:5px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface2);color:var(--muted);font-weight:500;font-size:13.5px;transition:background .2s,color .2s,border-color .2s}

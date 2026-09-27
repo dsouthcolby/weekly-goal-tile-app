@@ -46,10 +46,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .sync[data-state="busy"]::before,.sync[data-state="offline"]::before{background:var(--accent)}
 .sync[data-state="auth"],.sync[data-state="error"]{color:var(--danger)}
 .sync[data-state="auth"]::before,.sync[data-state="error"]::before{background:var(--danger)}
-.hlink{border:0;background:none;padding:8px 4px;font-size:14px;font-weight:600;color:var(--muted)}
-.hlink:hover{color:var(--ink)}
+.hicon{width:40px;height:40px;border:0;border-radius:12px;background:none;color:var(--muted);display:inline-grid;place-items:center;padding:0}
+.hicon:hover{color:var(--ink);background:var(--surface2)}
 .iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;height:36px;min-width:36px;padding:0 12px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px}
-.top-actions{display:flex;gap:8px}
+.top-actions{display:flex;gap:2px}
 .weeknav{display:flex;align-items:center;gap:8px;margin-top:14px;max-width:520px;margin-inline:auto}
 .weeknav .range{flex:1;text-align:center;font-weight:600;font-size:14px}
 .weeknav .range small{display:block;color:var(--muted);font-weight:500;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
@@ -66,11 +66,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .menu{display:grid;border-top:1px solid var(--line);padding-top:12px;gap:2px}
 .menu-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .menu-head .lab{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.mi{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:6px 0}
-.mi .mn{font-weight:600;overflow-wrap:anywhere}
-.mi .mp{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;font-weight:600;white-space:nowrap}
-.buy{border:0;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:13px;padding:0 16px;min-height:36px}
-.buy:disabled{background:var(--surface2);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line);cursor:default}
+.treats{display:flex;flex-wrap:wrap;gap:8px;padding-top:4px}
+.treat{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface2);color:var(--muted);font-weight:600;font-size:14px;transition:background .2s,color .2s,border-color .2s}
+.treat .tpr{font-variant-numeric:tabular-nums;font-weight:700;font-size:12px;opacity:.85}
+.treat.ready{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .menu .nextline{padding-top:8px}
 .hbuys{display:grid;gap:4px;margin-top:8px}
 .hbuy{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}
@@ -224,8 +223,8 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
       <button class="sync" id="syncBtn" type="button" data-state="local">Saved on this device</button>
     </div>
     <div class="top-actions">
-      <button class="hlink" id="histBtn" type="button">History</button>
-      <button class="hlink" id="setBtn" type="button">Settings</button>
+      <button class="hicon" id="histBtn" type="button" aria-label="History" title="History"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></button>
+      <button class="hicon" id="setBtn" type="button" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.88 9.87 L21.41 10.09 L21.41 13.91 L18.88 14.13 L18.37 15.36 L20.00 17.30 L17.30 20.00 L15.36 18.37 L14.13 18.88 L13.91 21.41 L10.09 21.41 L9.87 18.88 L8.64 18.37 L6.70 20.00 L4.00 17.30 L5.63 15.36 L5.12 14.13 L2.59 13.91 L2.59 10.09 L5.12 9.87 L5.63 8.64 L4.00 6.70 L6.70 4.00 L8.64 5.63 L9.87 5.12 L10.09 2.59 L13.91 2.59 L14.13 5.12 L15.36 5.63 L17.30 4.00 L20.00 6.70 L18.37 8.64 Z"/><circle cx="12" cy="12" r="3"/></svg></button>
     </div>
   </div>
 
@@ -243,7 +242,7 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
     <div class="nextline" id="dayline" hidden></div>
     <div class="menu">
       <div class="menu-head"><span class="lab">Treat menu</span><button class="link" id="rwBtn" type="button">Edit menu</button></div>
-      <div id="rewards"></div>
+      <div class="treats" id="rewards"></div>
       <div class="nextline" id="nextline"></div>
     </div>
   </section>
@@ -531,21 +530,22 @@ function renderScore(items) {
   $('#meta').innerHTML = (note.hidden ? `<span><b>${earned} pts</b> earned this week</span>` : '')
     + (lib.limit ? `<span><b>${count}</b> of <b>${lib.limit}</b> tiles</span>` : '');
   const rws = lib.rewards;
-  $('#rewards').innerHTML = rws.map(r => `<div class="mi"><span class="mn">${esc(r.name)}</span><span class="mp">${r.points} pts</span><button class="buy" type="button" data-buy="${esc(r.id)}"${bal >= r.points ? '' : ' disabled'} aria-label="${bal >= r.points ? `Buy ${esc(r.name)} for ${r.points} points` : `${r.points - bal} more points needed for ${esc(r.name)}`}">${bal >= r.points ? 'Buy' : `${r.points - bal} more`}</button></div>`).join('');
+  // Each treat is a button: muted until you can afford it, filled when it's ready to buy.
+  $('#rewards').innerHTML = rws.map(r => { const ok = bal >= r.points; return `<button class="treat${ok ? ' ready' : ''}" type="button" data-buy="${esc(r.id)}" aria-label="${ok ? `Buy ${esc(r.name)} for ${r.points} points` : `${esc(r.name)}, ${r.points} points, ${r.points - bal} more needed`}"><span>${esc(r.name)}</span><span class="tpr">${r.points}</span></button>`; }).join('');
   $('#nextline').innerHTML = rws.length ? '' : 'No treats on the menu yet. Tap <b>Edit menu</b> to add some.';
   $('#nextline').hidden = !!rws.length;
 }
 function buy(id) {
   const r = lib.rewards.find(x => x.id === id); if (!r) return;
   const bal = balance();
-  if (bal < r.points) { toast(`You need ${r.points - bal} more pts for ${r.name}`); return; }
+  if (bal < r.points) { toast(`${r.points - bal} more pts for ${r.name}`); return; }
   const now = Date.now();
   const p = np({ id: rid(), kind: 'buy', week: iso(weekStartDate(0)), day: (new Date().getDay() - lib.weekStart + 7) % 7, tileId: r.id, name: r.name, points: r.points, createdAt: now, updatedAt: now });
   P[p.id] = p; dirty.p[p.id] = 1;
   changed();
   toast(`Bought ${r.name} · ${Math.max(0, balance())} pts left`);
 }
-$('#rewards').addEventListener('click', e => { const b = e.target.closest('[data-buy]'); if (b && !b.disabled) buy(b.dataset.buy); });
+$('#rewards').addEventListener('click', e => { const b = e.target.closest('[data-buy]'); if (b) buy(b.dataset.buy); });
 
 function render() {
   if (!curStart) setCur();

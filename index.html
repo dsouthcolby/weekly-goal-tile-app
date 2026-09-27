@@ -85,12 +85,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .meta b{color:var(--ink);font-weight:500}
 .ptslab{font-size:13px;font-weight:500;color:var(--muted);margin-top:6px}
 .ptsnote{font-size:12px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
-.menu{display:grid;border-left:1px solid var(--line);padding-left:16px;gap:2px;align-content:start}
-@media (max-width:339px){ .score{grid-template-columns:1fr} .menu{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:12px} }
-.menu-head{display:flex;align-items:center;justify-content:space-between;gap:8px;white-space:nowrap}
-.menu-head .link{padding-right:0}
-.menu-head .lab{font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.treats{display:flex;flex-wrap:wrap;gap:8px;padding-top:4px}
+.menu{display:grid;gap:2px;align-content:start}
+@media (max-width:339px){ .score{grid-template-columns:1fr} }
+.treats{display:flex;flex-wrap:wrap;gap:8px}
+.treats-list{display:contents}
+.treat.edit{background:transparent;border-style:dashed;color:var(--muted)}
 .treat{display:inline-flex;align-items:center;gap:7px;min-height:36px;max-width:100%;text-align:left;line-height:1.2;padding:5px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface2);color:var(--muted);font-weight:500;font-size:13.5px;transition:background .2s,color .2s,border-color .2s}
 .treat .tpr{font-variant-numeric:tabular-nums;font-weight:500;font-size:12px;opacity:.85}
 .treat.ready{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -270,8 +269,7 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
       <div class="nextline" id="dayline" hidden></div>
     </div>
     <div class="menu">
-      <div class="menu-head"><span class="lab">Treats</span><button class="link" id="rwBtn" type="button" aria-label="Edit treat menu">Edit</button></div>
-      <div class="treats" id="rewards"></div>
+      <div class="treats"><span class="treats-list" id="rewards"></span><button class="treat edit" id="rwBtn" type="button" aria-label="Edit treat menu">Edit</button></div>
       <div class="nextline" id="nextline"></div>
     </div>
   </section>

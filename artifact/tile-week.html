@@ -351,8 +351,8 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 // Inside claude.ai the page syncs through the artifact's own database. Elsewhere it syncs
 // through Supabase once these two values are filled in (see README). Both are safe to publish:
 // the database's access rules, not this key, keep each person's board private.
-const SUPABASE_URL = '';
-const SUPABASE_KEY = '';
+const SUPABASE_URL = 'https://vvjvgudcltpkjtqsagkq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2anZndWRjbHRwa2p0cXNhZ2txIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MzY4MjAsImV4cCI6MjEwNjAxMjgyMH0.7OD0MZya2B_VjC4kJEaZ7Dq470dusKPHTbHG2nOjHbU';
 const IN_CLAUDE = !!(window.claude && typeof window.claude.use === 'function');
 const CLOUD = !IN_CLAUDE && !!(SUPABASE_URL && SUPABASE_KEY);
 

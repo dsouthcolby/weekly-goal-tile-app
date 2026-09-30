@@ -486,7 +486,7 @@ html:not([data-look="y2k"]):not([data-look="brown"]) .mtreat{font-size:12px}
 </style>
 <script>
 // Pick the saved look before the page draws, so a Y2K or brown board never flashes the default XP look.
-try { const l = JSON.parse(localStorage.getItem('tw2:lib')); if (l && (l.look === 'y2k' || l.look === 'brown')) document.documentElement.dataset.look = l.look; } catch {}
+try { const l = JSON.parse(localStorage.getItem('tw2:lib')), k = (l && l.look) || JSON.parse(localStorage.getItem('tw2:look')); if (k === 'y2k' || k === 'brown') document.documentElement.dataset.look = k; } catch {}
 </script>
 <!-- /artifact:head -->
 </head>
@@ -726,7 +726,10 @@ const LS = {
   set(k, v) { try { localStorage.setItem('tw2:' + k, JSON.stringify(v)); } catch {} },
   del(k) { try { localStorage.removeItem('tw2:' + k); } catch {} },
 };
-let lib = normLib(LS.get('lib') || structuredClone(SEED));
+// A fresh board (first open, signing out, another account) starts in the last look this device showed,
+// so the sign-in screen keeps your look. Your account's own look replaces it once it syncs.
+const freshLib = () => { const k = LS.get('look'); return normLib({ ...structuredClone(SEED), look: LOOKS[k] ? k : 'xp' }); };
+let lib = LS.get('lib') ? normLib(LS.get('lib')) : freshLib();
 // Records saved by earlier versions can lack newer fields (e.g. "kind", added with the treat
 // menu). Normalize every record on load so each one has every field.
 let P = Object.fromEntries(Object.entries(LS.get('places') || {}).map(([id, r]) => [id, np({ ...r, id })]));
@@ -757,11 +760,11 @@ if (!LS.get('legacyDone')) {
 
 // A different person signing in on this device starts from a clean board.
 function useAccount(id) {
-  if (acct && acct !== id) { lib = normLib(structuredClone(SEED)); P = {}; dirty = { lib: false, p: {} }; LS.del('cursor'); }
+  if (acct && acct !== id) { lib = freshLib(); P = {}; dirty = { lib: false, p: {} }; LS.del('cursor'); }
   acct = id; persist();
 }
 function resetDevice() {
-  lib = normLib(structuredClone(SEED)); P = {}; dirty = { lib: false, p: {} }; acct = '';
+  lib = freshLib(); P = {}; dirty = { lib: false, p: {} }; acct = '';
   LS.del('cursor'); LS.del('email'); persist();
 }
 
@@ -996,6 +999,7 @@ function applyLook(k) {
 }
 function render() {
   applyLook(lib.look);
+  if (LS.get('look') !== lib.look) LS.set('look', lib.look);
   if (!curStart) setCur();
   const items = weekItems(curStart);
   const ws = fromIso(curStart), we = addDays(ws, 6);

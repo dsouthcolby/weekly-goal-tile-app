@@ -331,14 +331,13 @@ body::before{content:'';position:fixed;inset:0 0 calc(var(--tray-h) - 6px) 0;z-i
 @media (hover:hover){.treat:not(.ready):hover,.btn:not(:disabled):not(.danger):hover,.mtreat:not(.ready):hover{box-shadow:inset -1px 1px #fff0cf,inset 1px 2px #fdd889,inset -2px 2px #fbc761,inset 2px -2px #e5a01a}}
 .link{color:#0B3FBF;font-weight:400;text-decoration:underline;text-underline-offset:2px}
 .link.on{background:#316AC5;color:#fff;border-radius:0;text-decoration:none}
-/* The tray: the taskbar with its clock on top, the Start menu's white below */
+/* The tray: the taskbar on top, the Start menu's white below */
 .tray{background:#fff;border-top:0;padding-top:0;box-shadow:0 -2px 6px rgba(0,0,0,.25)}
 .taskbar{display:flex;align-items:stretch;background:linear-gradient(180deg,#1F2F86 0,#3165C4 3%,#3682E5 6%,#4490E6 10%,#3883E5 12%,#2B71E0 15%,#2663DA 18%,#235BD6 20%,#2258D5 23%,#2157D6 38%,#245DDB 54%,#2562DF 86%,#245FDC 89%,#2158D4 92%,#1D4EC0 95%,#1941A5 98%);margin-bottom:6px}
 .taskbar .tray-head{flex:1;min-width:0;min-height:32px}
 .taskbar .tray-head,.taskbar .tray-head b{color:#fff;text-shadow:1px 1px 1px rgba(0,0,0,.4)}
 .taskbar .link{color:#fff;text-decoration:none}
 .taskbar .link.on{background:rgba(255,255,255,.22);border-radius:3px}
-.xp-clock{flex:none;display:flex;align-items:center;padding:0 12px;background:linear-gradient(180deg,#0C59B9 0,#139EE9 5%,#18B5F2 8%,#139BEB 12%,#1290E8 20%,#0D8DEA 40%,#0D9FF1 90%,#0F9EED 95%,#119BE9);border-left:1px solid #1042AF;box-shadow:inset 1px 0 #18BBFF;color:#fff;font-size:12px;font-variant-numeric:tabular-nums;text-shadow:1px 1px 1px rgba(0,0,0,.35)}
 /* Dialogs as XP windows: the heading becomes the title bar */
 dialog::backdrop{background:rgba(0,0,0,.25)}
 .sheet{background:var(--bg);border:0;border-radius:8px 8px 0 0;padding:0 14px calc(16px + env(safe-area-inset-bottom, 0px));box-shadow:inset -1px -1px #00138c,inset 1px 1px #0831d9,inset -2px -2px #001ea0,inset 2px 2px #166aee,inset -3px -3px #003bda,inset 3px 3px #0855dd,0 -4px 14px rgba(0,0,0,.3)}
@@ -416,7 +415,7 @@ input:focus,select:focus{outline:1px solid #316AC5;outline-offset:0}
 
 <div class="tray" id="tray">
   <div class="tray-in">
-    <div class="taskbar"><div class="tray-head" id="trayHead"></div><span class="xp-clock" id="clock"></span></div>
+    <div class="taskbar"><div class="tray-head" id="trayHead"></div></div>
     <div class="tiles" id="tiles"></div>
   </div>
 </div>
@@ -797,9 +796,6 @@ function setBankMin(on) {
 }
 $('#bankMin').addEventListener('click', () => setBankMin(!bankMin));
 setBankMin(bankMin);
-// The taskbar clock.
-const tickClock = () => { $('#clock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); };
-tickClock(); setInterval(tickClock, 15000);
 $('#buyForm').addEventListener('submit', e => {
   e.preventDefault();
   const id = buyingId; buyingId = null;

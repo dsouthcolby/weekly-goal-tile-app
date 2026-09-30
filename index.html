@@ -27,7 +27,7 @@ body{margin:0}
   --accent:#A83871; --accent-ink:#FFFFFF; --accent-soft:#F4DDEA; --good:#3F7A55; --good-soft:#D8EDDF; --danger:#B23A45;
   --edge:#6B6588; /* pixel outlines and hard shadows */
   /* Tiles: pink, butter, mint, sky, lilac, peach. */
-  --bill:#C8E7C5; --bill-deep:#8DB894; --bill-oval:#EEF7EC; --bill-line:#3E6B4E;
+  --bill:#C8E7C5; --bill-deep:#8DB894; --bill-oval:#EEF7EC; --bill-line:#3E6B4E; --coin:#F0C75E; --coin-edge:#A67C1B;
   --c0:#EEC3DA; --c1:#E8DFB0; --c2:#C8E7C5; --c3:#C2DAED; --c4:#D7CBF0; --c5:#ECD2BC; --cink:#352D57;
   --shadow:4px 4px 0 var(--edge); --tray-h:230px;
   --arcade:"Press Start 2P", ui-monospace, monospace;
@@ -263,6 +263,9 @@ input,select{border:2px solid var(--line)}
 .bill .pts.long{font-size:13px}
 .bill .pts span{display:none}
 .ptslab{margin-top:8px}
+.fx-coin{position:fixed;left:0;top:0;width:12px;height:12px;z-index:80;pointer-events:none;background:var(--coin);box-shadow:inset 0 0 0 2px var(--coin-edge);clip-path:polygon(25% 0,75% 0,100% 25%,100% 75%,75% 100%,25% 100%,0 75%,0 25%)}
+.fx-spark{position:absolute;width:12px;height:12px;z-index:2;pointer-events:none;background:var(--coin);clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
+.fx-spark.white{background:#E58FB3}
 </style>
 <!-- /artifact:head -->
 </head>
@@ -341,6 +344,17 @@ input,select{border:2px solid var(--line)}
     <div class="actions"><div class="right">
       <button class="btn" type="button" data-close>Cancel</button>
       <button class="btn primary" type="submit">Save</button>
+    </div></div>
+  </form>
+</dialog>
+
+<dialog id="buyDlg">
+  <form class="sheet" id="buyForm" method="dialog">
+    <h2 id="buyTitle">Buy this treat?</h2>
+    <p class="help" id="buyText"></p>
+    <div class="actions"><div class="right">
+      <button class="btn" type="button" data-close>Not yet</button>
+      <button class="btn primary" type="submit" id="buyOk">Buy</button>
     </div></div>
   </form>
 </dialog>
@@ -604,7 +618,63 @@ function buy(id) {
   changed();
   toast(`Bought ${r.name} · ${Math.max(0, balance())} pts left`);
 }
-$('#rewards').addEventListener('click', e => { const b = e.target.closest('[data-buy]'); if (b) buy(b.dataset.buy); });
+// Tapping a treat asks first; confirming buys it and rains coins out of the bill.
+let buyingId = null;
+function confirmBuy(id) {
+  const r = lib.rewards.find(x => x.id === id); if (!r) return;
+  const bal = balance();
+  if (bal < r.points) { toast(`${r.points - bal} more pts for ${r.name}`); return; }
+  buyingId = id;
+  $('#buyTitle').textContent = `Buy ${r.name}?`;
+  $('#buyText').textContent = `It costs ${r.points} pts. You’ll have ${bal - r.points} pts left.`;
+  $('#buyOk').textContent = `Buy for ${r.points} pts`;
+  $('#buyDlg').showModal();
+}
+$('#rewards').addEventListener('click', e => { const b = e.target.closest('[data-buy]'); if (b) confirmBuy(b.dataset.buy); });
+$('#buyForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const id = buyingId; buyingId = null;
+  $('#buyDlg').close();
+  if (id) { buy(id); coinRain(); }
+});
+$('#buyDlg').addEventListener('close', () => { buyingId = null; });
+
+/* ---------- little celebrations (skipped when the phone asks for reduced motion) ---------- */
+const calm = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const rand = (a, b) => a + Math.random() * (b - a);
+// Gold pixel coins spring up out of the bill, flip as they fly, and fall off the screen.
+function coinRain() {
+  const bill = document.querySelector('.bill');
+  if (calm() || !bill || !Element.prototype.animate) return;
+  const r = bill.getBoundingClientRect(), x0 = r.left + r.width / 2, y0 = r.top + r.height / 2, fall = innerHeight - y0 + 40;
+  for (let i = 0; i < 18; i++) {
+    const c = document.createElement('span');
+    c.className = 'fx-coin';
+    document.body.appendChild(c);
+    const vx = rand(-170, 170), vy = rand(-460, -280), g = 1500, T = (-vy + Math.sqrt(vy * vy + 2 * g * fall)) / g, dx = rand(-14, 14);
+    const frames = [];
+    for (let k = 0; k <= 16; k++) {
+      const t = T * k / 16, flip = Math.cos(t * rand(14, 22));
+      frames.push({ transform: `translate(${x0 + dx + vx * t - 6}px, ${y0 + vy * t + g * t * t / 2 - 6}px) scaleX(${flip.toFixed(2)})` });
+    }
+    c.animate(frames, { duration: T * 1000, delay: i * 35, easing: 'linear', fill: 'both' }).onfinish = () => c.remove();
+  }
+}
+// The bill shivers and a few sparkles pop out when points come in.
+function billCelebrate() {
+  const bill = document.querySelector('.bill');
+  if (calm() || !bill || !Element.prototype.animate) return;
+  bill.animate([{ transform: 'translate(0,0)' }, { transform: 'translate(-2px,0)' }, { transform: 'translate(2px,-1px)' }, { transform: 'translate(-2px,1px)' }, { transform: 'translate(2px,0)' }, { transform: 'translate(-1px,0)' }, { transform: 'translate(0,0)' }], { duration: 480, easing: 'steps(6, end)' });
+  for (let i = 0; i < 6; i++) {
+    const s = document.createElement('span');
+    s.className = 'fx-spark' + (i % 2 ? ' white' : '');
+    const a = rand(0, Math.PI * 2), cx = 66 + Math.cos(a) * 62, cy = 34 + Math.sin(a) * 34;
+    s.style.left = cx - 6 + 'px'; s.style.top = cy - 6 + 'px';
+    bill.appendChild(s);
+    const ox = Math.cos(a) * 14, oy = Math.sin(a) * 10;
+    s.animate([{ transform: 'translate(0,0) scale(0)' }, { transform: `translate(${ox / 2}px,${oy / 2}px) scale(1.2)`, offset: .45 }, { transform: `translate(${ox}px,${oy}px) scale(0)` }], { duration: rand(500, 750), delay: i * 60, easing: 'steps(5, end)', fill: 'both' }).onfinish = () => s.remove();
+  }
+}
 
 function render() {
   if (!curStart) setCur();
@@ -671,6 +741,7 @@ function addItem(tileId, day) {
   P[item.id] = item; dirty.p[item.id] = 1;
   changed();
   const chip = document.querySelector(`[data-item="${item.id}"]`); if (chip) chip.classList.add('pop');
+  billCelebrate();
   const after = before + item.points;
   const dayAfter = dayBefore + item.points, dayName = DAYS_FULL[addDays(fromIso(curStart), Number(day)).getDay()];
   const unlocked = lib.rewards.filter(r => before < r.points && after >= r.points);

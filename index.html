@@ -244,6 +244,17 @@ html{overflow-x:hidden;overflow-x:clip}
 .treat{position:relative}
 .fx-spark{position:absolute;width:12px;height:12px;z-index:2;pointer-events:none;background:var(--coin);clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
 .fx-spark.white{background:#E58FB3}
+/* Settings: compact, one line per setting, saved as you go (Done closes it) */
+.sethead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sethead .btn{min-height:0;padding:4px 14px;font-size:13px;font-weight:600;letter-spacing:0;text-transform:none;line-height:1.3;flex:none}
+#setForm{gap:12px}
+#setForm .row2{display:contents}
+#setForm .field.inline{grid-template-columns:minmax(0,1fr) 128px;align-items:center;column-gap:10px;row-gap:2px}
+#setForm .field.inline > .help{grid-column:1/-1;font-size:11.5px}
+#setForm .field.inline input,#setForm .field.inline select{height:38px;padding:6px 8px;font-size:16px}
+#setForm .looks{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+#setForm .look-opt{padding:5px 4px;gap:4px;font-size:11px;line-height:1.2}
+#setForm .look-opt i{height:18px}
 /* The look picker in Settings: a small sample of each look above its name */
 .looks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .look-opt{display:grid;gap:6px;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;font-size:12.5px;text-align:center}
@@ -715,7 +726,7 @@ try { const l = JSON.parse(localStorage.getItem('tw2:lib')), k = (l && l.look) |
 
 <dialog id="setDlg">
   <form class="sheet" id="setForm" method="dialog">
-    <h2>Settings</h2>
+    <h2 class="sethead"><span>Settings</span><button class="btn" type="button" id="setDone" data-close>Done</button></h2>
     <div class="field"><span class="lab" id="lookLab">Look</span>
       <div class="looks" id="looks" role="group" aria-labelledby="lookLab">
         <button class="look-opt" type="button" data-look="xp" aria-pressed="false"><i class="ls-xp" aria-hidden="true"></i>Windows XP</button>
@@ -723,23 +734,19 @@ try { const l = JSON.parse(localStorage.getItem('tw2:lib')), k = (l && l.look) |
         <button class="look-opt" type="button" data-look="y2k" aria-pressed="false"><i class="ls-y2k" aria-hidden="true"></i>Y2K pixel</button>
         <button class="look-opt" type="button" data-look="brown" aria-pressed="false"><i class="ls-brown" aria-hidden="true"></i>Simple brown</button>
       </div>
-      <span class="help">Tap one to try it. Save keeps it on all your devices.</span></div>
-    <div class="field"><label for="sStart">Week starts on</label>
+      <span class="help">Changes save as you go, on all your devices.</span></div>
+    <div class="field inline"><label for="sStart">Week starts on</label>
       <select id="sStart"></select>
-      <span class="help">The board clears itself at the start of each week. Past weeks stay in History.</span></div>
-    <div class="field"><label for="sLimit">Tile limit per week</label><input id="sLimit" type="number" inputmode="numeric" min="0" max="200" placeholder="No limit"><span class="help">Leave blank for no limit.</span></div>
+      <span class="help">The board clears at the start of each week. Past weeks stay in History.</span></div>
+    <div class="field inline"><label for="sLimit">Tile limit per week</label><input id="sLimit" type="number" inputmode="numeric" min="0" max="200" placeholder="No limit"></div>
     <div class="row2">
-      <div class="field"><label for="sTarget">Daily points target</label><input id="sTarget" type="number" inputmode="numeric" min="0" max="999" placeholder="No target"><span class="help">Days that reach it get a tick.</span></div>
-      <div class="field"><label for="sDayMax">Daily points max</label><input id="sDayMax" type="number" inputmode="numeric" min="0" max="999" placeholder="No max"><span class="help">Days over it turn red. You can still add tiles.</span></div>
+      <div class="field inline"><label for="sTarget">Daily points target</label><input id="sTarget" type="number" inputmode="numeric" min="0" max="999" placeholder="No target"><span class="help">Days that reach it get a tick.</span></div>
+      <div class="field inline"><label for="sDayMax">Daily points max</label><input id="sDayMax" type="number" inputmode="numeric" min="0" max="999" placeholder="No max"><span class="help">Days over it turn red. You can still add tiles.</span></div>
     </div>
     <div class="field" id="acctField" hidden><span class="lab">Account</span>
       <div class="acct"><span class="help" id="acctInfo"></span><button class="btn" id="acctBtn" type="button">Sign out</button></div>
       <span class="help" id="acctNote" hidden></span>
     </div>
-    <div class="actions"><div class="right">
-      <button class="btn" type="button" data-close>Cancel</button>
-      <button class="btn primary" type="submit">Save</button>
-    </div></div>
   </form>
 </dialog>
 
@@ -1707,17 +1714,29 @@ function renderAccount() {
   $('#acctInfo').textContent = acct ? `Signed in${email ? ' as ' + email : ''}` : 'Not signed in. Your board is saved on this device only.';
   $('#acctBtn').textContent = acct ? 'Sign out' : 'Sign in';
 }
-// The look picker previews as you tap; Save keeps it, Cancel goes back.
-let lookPick = null;
-function pickLook(k) {
-  lookPick = k;
-  for (const b of $('#looks').children) b.setAttribute('aria-pressed', String(b.dataset.look === k));
-  applyLook(k);
+// Settings save as you go: each change is kept the moment it's made, on all your devices.
+function markLook(k) { for (const b of $('#looks').children) b.setAttribute('aria-pressed', String(b.dataset.look === k)); }
+$('#looks').addEventListener('click', e => {
+  const b = e.target.closest('[data-look]');
+  if (!b || b.dataset.look === lib.look) return;
+  lib = { ...lib, look: b.dataset.look }; markLook(lib.look); saveLib(); toast('Saved');
+});
+function saveSettings() {
+  const ws = +$('#sStart').value, moved = ws !== lib.weekStart;
+  const num = (id, max) => Math.max(0, Math.min(max, parseInt($(id).value, 10) || 0));
+  const next = { weekStart: ws, limit: num('#sLimit', 200), dayTarget: num('#sTarget', 999), dayMax: num('#sDayMax', 999) };
+  // Show the value that was kept (clamped, or blank for none).
+  $('#sLimit').value = next.limit || ''; $('#sTarget').value = next.dayTarget || ''; $('#sDayMax').value = next.dayMax || '';
+  if (Object.keys(next).every(k => next[k] === lib[k])) return;
+  lib = { ...lib, ...next };
+  if (moved) { offset = 0; setCur(); alignWeeks(); }
+  saveLib(); toast('Saved');
 }
-$('#looks').addEventListener('click', e => { const b = e.target.closest('[data-look]'); if (b) pickLook(b.dataset.look); });
+for (const id of ['#sStart', '#sLimit', '#sTarget', '#sDayMax']) $(id).addEventListener('change', saveSettings);
 $('#setDlg').addEventListener('close', () => applyLook(lookNow()));
 function openSettings() {
-  pickLook(lib.look);
+  settingsAcct = acct;
+  markLook(lib.look);
   $('#sStart').value = lib.weekStart;
   $('#sLimit').value = lib.limit || '';
   $('#sTarget').value = lib.dayTarget || '';
@@ -1740,15 +1759,12 @@ $('#acctBtn').onclick = async () => {
   resetDevice(); offset = 0; setCur();
   $('#setDlg').close(); setSync('local'); render(); openAuth();
 };
-$('#setForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const ws = +$('#sStart').value, moved = ws !== lib.weekStart;
-  const num = (id, max) => Math.max(0, Math.min(max, parseInt($(id).value, 10) || 0));
-  lib = { ...lib, weekStart: ws, limit: num('#sLimit', 200), dayTarget: num('#sTarget', 999), dayMax: num('#sDayMax', 999), look: lookPick || lib.look };
-  if (moved) { offset = 0; setCur(); alignWeeks(); }
-  $('#setDlg').close(); saveLib();
-  toast('Settings saved');
-});
+// Return in a box keeps what was typed and closes Settings.
+$('#setForm').addEventListener('submit', e => { e.preventDefault(); saveSettings(); $('#setDlg').close(); });
+// Closing any other way (Done, the backdrop, Escape) keeps a value still being typed too.
+// Not after signing out or switching account from here: those boxes belonged to the old board.
+let settingsAcct = null;
+$('#setDlg').addEventListener('close', () => { if (acct === settingsAcct) saveSettings(); });
 
 // History
 function renderHistory() {

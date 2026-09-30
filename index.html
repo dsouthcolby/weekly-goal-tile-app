@@ -6,8 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Weekly Tracker">
-<meta name="theme-color" content="#EFE9DF" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1B1814" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#EBE5F6">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -19,36 +18,21 @@ body{margin:0}
 <!-- artifact:head -->
 <title>Weekly Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Nunito:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600&family=Press+Start+2P&display=swap">
 <style>
 :root{
-  /* Earth tones: linen ground, walnut accent, moss for "reached", brick for "over". */
-  --bg:#EFE9DF; --surface:#FBF8F3; --surface2:#F4EFE6; --ink:#2B2620; --muted:#6B6155; --line:#DDD3C4;
-  --accent:#6F4E37; --accent-ink:#FFFFFF; --accent-soft:#EADFD2; --good:#46693A; --good-soft:#DFE8D5; --danger:#A8382C;
-  /* Tiles: terracotta, ochre, sage, river stone, dusty heather, wheat. */
-  --wallet:#DDB48A; --wallet-deep:#BE8E62; --wallet-ink:#2B2620; --wallet-label:#5C4330; --coin:#E9C46F; --coin-edge:#B98E34;
-  --c0:#E4AE92; --c1:#E6C685; --c2:#BFCDA3; --c3:#BFC8C6; --c4:#CDB5B8; --c5:#E6D7BC; --cink:#2B2620;
-  --shadow:0 10px 30px rgba(43,38,32,.18); --tray-h:230px;
-  --display:"Fraunces", Georgia, "Times New Roman", serif;
-  --body:"Nunito", -apple-system, "Segoe UI", system-ui, sans-serif;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    color-scheme:dark;
-    --bg:#1B1814; --surface:#25211C; --surface2:#2E2923; --ink:#EFE8DD; --muted:#A89D8E; --line:#3B352D;
-    --accent:#D1AB86; --accent-ink:#1B1814; --accent-soft:#3A2F25; --good:#93B881; --good-soft:#26311F; --danger:#E5806F;
-    --wallet:#6E4E33; --wallet-deep:#56391F; --wallet-ink:#F3ECE2; --wallet-label:#E3CBB0; --coin:#C9A24E; --coin-edge:#8C6A22;
-    --wallet:#6E4E33; --wallet-deep:#56391F; --wallet-ink:#F3ECE2; --wallet-label:#E3CBB0; --coin:#C9A24E; --coin-edge:#8C6A22;
-  --c0:#6B3F2C; --c1:#6A5424; --c2:#3F4D2E; --c3:#37403F; --c4:#4B3A3E; --c5:#5A4C36; --cink:#F3ECE2;
-    --shadow:0 10px 30px rgba(0,0,0,.5);
-  }
-}
-:root[data-theme="dark"]{
-  color-scheme:dark;
-  --bg:#1B1814; --surface:#25211C; --surface2:#2E2923; --ink:#EFE8DD; --muted:#A89D8E; --line:#3B352D;
-  --accent:#D1AB86; --accent-ink:#1B1814; --accent-soft:#3A2F25; --good:#93B881; --good-soft:#26311F; --danger:#E5806F;
-  --c0:#6B3F2C; --c1:#6A5424; --c2:#3F4D2E; --c3:#37403F; --c4:#4B3A3E; --c5:#5A4C36; --cink:#F3ECE2;
-  --shadow:0 10px 30px rgba(0,0,0,.5);
+  /* Muted Y2K pastels, one light look everywhere (pixel styles are light by design). */
+  color-scheme:light;
+  --bg:#EBE5F6; --surface:#FFFCFD; --surface2:#F5F2FB; --ink:#352D57; --muted:#6B6588; --line:#C9C2DE;
+  --accent:#A83871; --accent-ink:#FFFFFF; --accent-soft:#F4DDEA; --good:#3F7A55; --good-soft:#D8EDDF; --danger:#B23A45;
+  --edge:#6B6588; /* pixel outlines and hard shadows */
+  /* Tiles: pink, butter, mint, sky, lilac, peach. */
+  --c0:#EEC3DA; --c1:#E8DFB0; --c2:#C8E7C5; --c3:#C2DAED; --c4:#D7CBF0; --c5:#ECD2BC; --cink:#352D57;
+  --pig:#EAB7D3; --pig-shade:#DA8FB8; --pig-belly:#F5E5EE; --pig-line:#352D57; --pig-blush:#E58FB3; --coin:#F0C75E; --coin-edge:#A67C1B;
+  --shadow:4px 4px 0 var(--edge); --tray-h:230px;
+  --arcade:"Press Start 2P", ui-monospace, monospace;
+  --display:"Pixelify Sans", ui-monospace, monospace;
+  --body:"Pixelify Sans", -apple-system, "Segoe UI", system-ui, sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box}
 b,strong{font-weight:600}
@@ -80,14 +64,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 /* Score + rewards */
 .score{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:16px;align-items:start}
 .bal{display:grid;gap:2px;align-content:start;isolation:isolate}
-/* The balance sits in a little leather wallet: stitched edge, a clasp tab, a coin peeking out. */
-.wallet{position:relative;justify-self:start;margin-top:10px;padding:14px 34px 12px 14px;border-radius:12px 12px 16px 16px;background:var(--wallet);color:var(--wallet-ink);box-shadow:0 2px 0 var(--wallet-deep)}
-.wallet::before{content:"";position:absolute;inset:4px;border:1.5px dashed color-mix(in srgb, var(--wallet-ink) 22%, transparent);border-radius:9px 9px 13px 13px;pointer-events:none}
-.wallet .clasp{position:absolute;right:-4px;top:50%;width:26px;height:22px;margin-top:-11px;border-radius:9px 5px 5px 9px;background:var(--wallet-deep)}
-.wallet .clasp::after{content:"";position:absolute;left:6px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:var(--coin)}
-.wallet .coin{position:absolute;left:18px;top:-9px;width:20px;height:20px;border-radius:50%;background:var(--coin);box-shadow:inset 0 0 0 2px var(--coin-edge), inset 0 0 0 4px var(--coin);z-index:-1}
-.wallet .pts span{color:var(--wallet-label)}
-.wallet .ptslab{color:var(--wallet-label);margin-top:4px}
 .bal .ptsnote{margin-top:8px}
 .bal .meta,.bal .nextline{margin-top:8px}
 .pts{font-family:var(--display);font-weight:500;font-size:40px;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
@@ -249,6 +225,46 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 .toast{position:fixed;left:50%;bottom:calc(var(--tray-h) + 12px);transform:translate(-50%,10px);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:999px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;z-index:60;max-width:calc(100% - 32px);text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- Pixel look: square corners, pixel outlines, hard shadows, sparkles ---------- */
+html{overflow-x:clip}
+body{overflow-x:hidden;background:
+  radial-gradient(rgba(255,255,255,.9) 1.2px,transparent 1.7px) 0 0/24px 24px,
+  radial-gradient(rgba(255,255,255,.7) 1px,transparent 1.4px) 12px 12px/24px 24px,
+  linear-gradient(180deg,#EBE5F6,#DBE8F3 55%,#F8EAF2) fixed}
+.iconbtn,.hicon,.score,.day,.treat,.tile,.chip,.chip .x,.tile .pen,.tray,.btn,.sheet,input,select,.auth-card,.rrow,.hist .h,.sw,.toast,.link.on{border-radius:0}
+.score,.day,.auth-card{border:2px solid var(--edge);box-shadow:var(--shadow)}
+.day.blank{border:2px dashed var(--line);box-shadow:none;background:rgba(255,252,253,.55)}
+.day.today{border-color:var(--ink);box-shadow:4px 4px 0 var(--ink)}
+.day.armed{border-style:dashed;border-color:var(--accent)}
+.day.hover{border-style:solid;border-color:var(--accent)}
+.chip{box-shadow:inset 0 0 0 2px rgba(53,45,87,.4)}
+.tile{box-shadow:inset 0 0 0 2px rgba(53,45,87,.4),3px 3px 0 rgba(53,45,87,.4)}
+.tile.add{box-shadow:none}
+.treat{border:2px solid var(--edge);background:linear-gradient(#FFFFFF,#EEE9F7);color:var(--muted);box-shadow:2px 2px 0 var(--edge)}
+.treat.ready{background:linear-gradient(#B8467F,#A83871);border-color:var(--ink);color:#fff}
+.treat.edit{background:transparent;border:2px dashed var(--line);box-shadow:none}
+.tray{border-top:2px solid var(--edge);box-shadow:none}
+.sheet{border:2px solid var(--edge);border-bottom:0}
+.btn{border:2px solid var(--edge)}
+.btn.primary{border-color:var(--ink);box-shadow:2px 2px 0 var(--ink)}
+input,select{border:2px solid var(--line)}
+.hist .h{border:2px solid var(--line)}
+.toast{border:2px solid var(--ink)}
+/* Header: arcade-font title, outlined buttons */
+.brand{font-family:var(--arcade);font-size:15px;letter-spacing:0;line-height:1.5;text-shadow:2px 2px 0 var(--c0)}
+.iconbtn{border:2px solid var(--edge);box-shadow:2px 2px 0 var(--edge);background:var(--surface)}
+.auth-card h1{font-family:var(--arcade);font-size:17px;line-height:1.5;letter-spacing:0}
+/* Balance in arcade digits, sitting on a big pixel piggy bank that spills off the left edge */
+.score{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+.pts{font-family:var(--arcade);font-size:24px;letter-spacing:0}
+.pts.long{font-size:18px}
+.pts span{font-family:var(--body);font-size:12px;margin-left:2px}
+.piggy{position:relative;width:200px;height:140px;margin:-8px 0 -4px -46px}
+.piggy .pig-art{display:block;width:200px;height:140px}
+.pig-sum{position:absolute;left:46px;top:66px;width:96px;text-align:center}
+.pig-sum .ptslab{margin-top:4px;font-size:11px}
+@media (max-width:339px){ .piggy{margin-left:-30px} }
 </style>
 <!-- /artifact:head -->
 </head>
@@ -274,11 +290,9 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 
   <section class="score" aria-live="polite">
     <div class="bal">
-      <div class="wallet">
-        <span class="coin" aria-hidden="true"></span>
-        <div class="pts" id="pts">0<span>pts</span></div>
-        <div class="ptslab">to spend</div>
-        <span class="clasp" aria-hidden="true"></span>
+      <div class="piggy">
+        <svg class="pig-art" viewBox="0 0 40 28" width="200" height="140" shape-rendering="crispEdges" aria-hidden="true"><rect x="17" y="0" width="3" height="1" fill="var(--coin-edge)"/><rect x="26" y="0" width="1" height="1" fill="var(--pig-line)"/><rect x="16" y="1" width="1" height="1" fill="var(--coin-edge)"/><rect x="17" y="1" width="3" height="1" fill="var(--coin)"/><rect x="20" y="1" width="1" height="1" fill="var(--coin-edge)"/><rect x="25" y="1" width="1" height="1" fill="var(--pig-line)"/><rect x="26" y="1" width="1" height="1" fill="var(--pig-shade)"/><rect x="27" y="1" width="1" height="1" fill="var(--pig-line)"/><rect x="31" y="1" width="1" height="1" fill="var(--pig-line)"/><rect x="16" y="2" width="1" height="1" fill="var(--coin-edge)"/><rect x="17" y="2" width="3" height="1" fill="var(--coin)"/><rect x="20" y="2" width="1" height="1" fill="var(--coin-edge)"/><rect x="25" y="2" width="1" height="1" fill="var(--pig-line)"/><rect x="26" y="2" width="1" height="1" fill="var(--pig-shade)"/><rect x="27" y="2" width="1" height="1" fill="var(--pig-line)"/><rect x="30" y="2" width="1" height="1" fill="var(--pig-line)"/><rect x="31" y="2" width="1" height="1" fill="var(--pig-shade)"/><rect x="32" y="2" width="1" height="1" fill="var(--pig-line)"/><rect x="16" y="3" width="1" height="1" fill="var(--coin-edge)"/><rect x="17" y="3" width="3" height="1" fill="var(--coin)"/><rect x="20" y="3" width="1" height="1" fill="var(--coin-edge)"/><rect x="25" y="3" width="1" height="1" fill="var(--pig-line)"/><rect x="26" y="3" width="2" height="1" fill="var(--pig-shade)"/><rect x="28" y="3" width="1" height="1" fill="var(--pig-line)"/><rect x="30" y="3" width="1" height="1" fill="var(--pig-line)"/><rect x="31" y="3" width="1" height="1" fill="var(--pig-shade)"/><rect x="32" y="3" width="1" height="1" fill="var(--pig-line)"/><rect x="14" y="4" width="3" height="1" fill="var(--pig-line)"/><rect x="17" y="4" width="3" height="1" fill="var(--coin-edge)"/><rect x="20" y="4" width="6" height="1" fill="var(--pig-line)"/><rect x="26" y="4" width="2" height="1" fill="var(--pig-shade)"/><rect x="28" y="4" width="2" height="1" fill="var(--pig-line)"/><rect x="30" y="4" width="2" height="1" fill="var(--pig-shade)"/><rect x="32" y="4" width="1" height="1" fill="var(--pig-line)"/><rect x="11" y="5" width="3" height="1" fill="var(--pig-line)"/><rect x="14" y="5" width="1" height="1" fill="var(--pig)"/><rect x="15" y="5" width="7" height="1" fill="var(--pig-line)"/><rect x="22" y="5" width="3" height="1" fill="var(--pig)"/><rect x="25" y="5" width="4" height="1" fill="var(--pig-shade)"/><rect x="29" y="5" width="1" height="1" fill="var(--pig-line)"/><rect x="30" y="5" width="2" height="1" fill="var(--pig-shade)"/><rect x="32" y="5" width="1" height="1" fill="var(--pig-line)"/><rect x="9" y="6" width="2" height="1" fill="var(--pig-line)"/><rect x="11" y="6" width="17" height="1" fill="var(--pig)"/><rect x="28" y="6" width="5" height="1" fill="var(--pig-shade)"/><rect x="33" y="6" width="1" height="1" fill="var(--pig-line)"/><rect x="8" y="7" width="1" height="1" fill="var(--pig-line)"/><rect x="9" y="7" width="21" height="1" fill="var(--pig)"/><rect x="30" y="7" width="3" height="1" fill="var(--pig-shade)"/><rect x="33" y="7" width="1" height="1" fill="var(--pig-line)"/><rect x="3" y="8" width="1" height="1" fill="var(--pig-line)"/><rect x="6" y="8" width="2" height="1" fill="var(--pig-line)"/><rect x="8" y="8" width="23" height="1" fill="var(--pig)"/><rect x="31" y="8" width="2" height="1" fill="var(--pig-line)"/><rect x="2" y="9" width="1" height="1" fill="var(--pig-line)"/><rect x="3" y="9" width="1" height="1" fill="var(--pig-shade)"/><rect x="4" y="9" width="2" height="1" fill="var(--pig-line)"/><rect x="6" y="9" width="27" height="1" fill="var(--pig)"/><rect x="33" y="9" width="1" height="1" fill="var(--pig-line)"/><rect x="1" y="10" width="1" height="1" fill="var(--pig-line)"/><rect x="2" y="10" width="1" height="1" fill="var(--pig-shade)"/><rect x="3" y="10" width="1" height="1" fill="var(--pig-line)"/><rect x="4" y="10" width="1" height="1" fill="var(--pig-shade)"/><rect x="5" y="10" width="1" height="1" fill="var(--pig-line)"/><rect x="6" y="10" width="27" height="1" fill="var(--pig)"/><rect x="33" y="10" width="1" height="1" fill="var(--pig-line)"/><rect x="1" y="11" width="1" height="1" fill="var(--pig-line)"/><rect x="2" y="11" width="1" height="1" fill="var(--pig-shade)"/><rect x="3" y="11" width="2" height="1" fill="var(--pig-line)"/><rect x="5" y="11" width="24" height="1" fill="var(--pig)"/><rect x="29" y="11" width="1" height="1" fill="#fff"/><rect x="30" y="11" width="1" height="1" fill="var(--pig-line)"/><rect x="31" y="11" width="3" height="1" fill="var(--pig)"/><rect x="34" y="11" width="3" height="1" fill="var(--pig-line)"/><rect x="2" y="12" width="1" height="1" fill="var(--pig-line)"/><rect x="3" y="12" width="1" height="1" fill="var(--pig-shade)"/><rect x="4" y="12" width="25" height="1" fill="var(--pig)"/><rect x="29" y="12" width="2" height="1" fill="var(--pig-line)"/><rect x="31" y="12" width="2" height="1" fill="var(--pig)"/><rect x="33" y="12" width="4" height="1" fill="var(--pig-shade)"/><rect x="37" y="12" width="1" height="1" fill="var(--pig-line)"/><rect x="3" y="13" width="1" height="1" fill="var(--pig-line)"/><rect x="4" y="13" width="10" height="1" fill="var(--pig)"/><rect x="14" y="13" width="9" height="1" fill="var(--pig-belly)"/><rect x="23" y="13" width="9" height="1" fill="var(--pig)"/><rect x="32" y="13" width="6" height="1" fill="var(--pig-shade)"/><rect x="38" y="13" width="1" height="1" fill="var(--pig-line)"/><rect x="3" y="14" width="1" height="1" fill="var(--pig-line)"/><rect x="4" y="14" width="8" height="1" fill="var(--pig)"/><rect x="12" y="14" width="13" height="1" fill="var(--pig-belly)"/><rect x="25" y="14" width="7" height="1" fill="var(--pig)"/><rect x="32" y="14" width="2" height="1" fill="var(--pig-shade)"/><rect x="34" y="14" width="1" height="1" fill="var(--pig-line)"/><rect x="35" y="14" width="1" height="1" fill="var(--pig-shade)"/><rect x="36" y="14" width="1" height="1" fill="var(--pig-line)"/><rect x="37" y="14" width="1" height="1" fill="var(--pig-shade)"/><rect x="38" y="14" width="1" height="1" fill="var(--pig-line)"/><rect x="3" y="15" width="1" height="1" fill="var(--pig-line)"/><rect x="4" y="15" width="6" height="1" fill="var(--pig)"/><rect x="10" y="15" width="17" height="1" fill="var(--pig-belly)"/><rect x="27" y="15" width="5" height="1" fill="var(--pig)"/><rect x="32" y="15" width="6" height="1" fill="var(--pig-shade)"/><rect x="38" y="15" width="1" height="1" fill="var(--pig-line)"/><rect x="3" y="16" width="1" height="1" fill="var(--pig-line)"/><rect x="4" y="16" width="6" height="1" fill="var(--pig)"/><rect x="10" y="16" width="17" height="1" fill="var(--pig-belly)"/><rect x="27" y="16" width="3" height="1" fill="var(--pig)"/><rect x="30" y="16" width="2" height="1" fill="var(--pig-blush)"/><rect x="32" y="16" width="1" height="1" fill="var(--pig)"/><rect x="33" y="16" width="4" height="1" fill="var(--pig-shade)"/><rect x="37" y="16" width="1" height="1" fill="var(--pig-line)"/><rect x="3" y="17" width="1" height="1" fill="var(--pig-line)"/><rect x="4" y="17" width="5" height="1" fill="var(--pig)"/><rect x="9" y="17" width="19" height="1" fill="var(--pig-belly)"/><rect x="28" y="17" width="7" height="1" fill="var(--pig)"/><rect x="35" y="17" width="2" height="1" fill="var(--pig-line)"/><rect x="4" y="18" width="1" height="1" fill="var(--pig-line)"/><rect x="5" y="18" width="4" height="1" fill="var(--pig)"/><rect x="9" y="18" width="19" height="1" fill="var(--pig-belly)"/><rect x="28" y="18" width="6" height="1" fill="var(--pig)"/><rect x="34" y="18" width="1" height="1" fill="var(--pig-line)"/><rect x="5" y="19" width="1" height="1" fill="var(--pig-line)"/><rect x="6" y="19" width="3" height="1" fill="var(--pig)"/><rect x="9" y="19" width="19" height="1" fill="var(--pig-belly)"/><rect x="28" y="19" width="5" height="1" fill="var(--pig)"/><rect x="33" y="19" width="1" height="1" fill="var(--pig-line)"/><rect x="5" y="20" width="1" height="1" fill="var(--pig-line)"/><rect x="6" y="20" width="4" height="1" fill="var(--pig)"/><rect x="10" y="20" width="17" height="1" fill="var(--pig-belly)"/><rect x="27" y="20" width="6" height="1" fill="var(--pig)"/><rect x="33" y="20" width="1" height="1" fill="var(--pig-line)"/><rect x="6" y="21" width="2" height="1" fill="var(--pig-line)"/><rect x="8" y="21" width="3" height="1" fill="var(--pig)"/><rect x="11" y="21" width="15" height="1" fill="var(--pig-belly)"/><rect x="26" y="21" width="5" height="1" fill="var(--pig)"/><rect x="31" y="21" width="2" height="1" fill="var(--pig-line)"/><rect x="8" y="22" width="1" height="1" fill="var(--pig-line)"/><rect x="9" y="22" width="4" height="1" fill="var(--pig)"/><rect x="13" y="22" width="11" height="1" fill="var(--pig-belly)"/><rect x="24" y="22" width="6" height="1" fill="var(--pig)"/><rect x="30" y="22" width="1" height="1" fill="var(--pig-line)"/><rect x="8" y="23" width="1" height="1" fill="var(--pig-line)"/><rect x="9" y="23" width="19" height="1" fill="var(--pig)"/><rect x="28" y="23" width="2" height="1" fill="var(--pig-shade)"/><rect x="30" y="23" width="1" height="1" fill="var(--pig-line)"/><rect x="8" y="24" width="1" height="1" fill="var(--pig-line)"/><rect x="9" y="24" width="4" height="1" fill="var(--pig)"/><rect x="13" y="24" width="1" height="1" fill="var(--pig-shade)"/><rect x="14" y="24" width="14" height="1" fill="var(--pig)"/><rect x="28" y="24" width="2" height="1" fill="var(--pig-shade)"/><rect x="30" y="24" width="1" height="1" fill="var(--pig-line)"/><rect x="8" y="25" width="1" height="1" fill="var(--pig-line)"/><rect x="9" y="25" width="4" height="1" fill="var(--pig)"/><rect x="13" y="25" width="2" height="1" fill="var(--pig-shade)"/><rect x="15" y="25" width="9" height="1" fill="var(--pig-line)"/><rect x="24" y="25" width="4" height="1" fill="var(--pig)"/><rect x="28" y="25" width="2" height="1" fill="var(--pig-shade)"/><rect x="30" y="25" width="1" height="1" fill="var(--pig-line)"/><rect x="8" y="26" width="1" height="1" fill="var(--pig-line)"/><rect x="9" y="26" width="4" height="1" fill="var(--pig)"/><rect x="13" y="26" width="2" height="1" fill="var(--pig-line)"/><rect x="23" y="26" width="1" height="1" fill="var(--pig-line)"/><rect x="24" y="26" width="4" height="1" fill="var(--pig)"/><rect x="28" y="26" width="2" height="1" fill="var(--pig-line)"/><rect x="9" y="27" width="4" height="1" fill="var(--pig-line)"/><rect x="24" y="27" width="4" height="1" fill="var(--pig-line)"/></svg>
+        <div class="pig-sum"><div class="pts" id="pts">0<span>pts</span></div><div class="ptslab">to spend</div></div>
       </div>
       <div class="ptsnote" id="ptsnote" hidden></div>
       <div class="meta" id="meta"></div>
@@ -564,6 +578,7 @@ function renderDayline(dayPts) {
 function renderScore(items) {
   const bal = Math.max(0, balance()), earned = total(items), count = items.length;
   $('#pts').innerHTML = `${bal}<span>pts</span>`;
+  $('#pts').classList.toggle('long', bal >= 1000);
   // Show how the balance adds up: this week + other weeks − spent.
   const all = Object.values(P).filter(p => !p.deleted);
   const other = total(all.filter(p => p.kind === 'tile' && p.week !== curStart)), spent = total(all.filter(p => p.kind === 'buy'));

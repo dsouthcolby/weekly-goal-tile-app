@@ -616,6 +616,7 @@ function renderScore(items) {
   const miniHtml = rws.map(r => { const ok = bal >= r.points; return `<button class="mtreat${ok ? ' ready' : ''}" type="button" data-buy="${esc(r.id)}" aria-label="${ok ? `Buy ${esc(r.name)} for ${r.points} points` : `${esc(r.name)}, ${r.points} points, ${r.points - bal} more needed`}"><span>${esc(r.name)}</span><span class="tpr">${r.points}</span></button>`; }).join('');
   if (miniHtml !== miniShown) { $('#miniTreats').innerHTML = miniHtml; miniShown = miniHtml; }
   fadeMini();
+  updateMini();
   // A treat that just became affordable (a tile placed, a purchase undone, a sync) sparkles.
   const ready = new Set(rws.filter(r => bal >= r.points).map(r => r.id));
   if (readyBefore) for (const id of ready) if (!readyBefore.has(id)) {
@@ -627,7 +628,6 @@ function renderScore(items) {
   readyBefore = ready;
   $('#nextline').innerHTML = rws.length ? '' : 'No treats on the menu yet. Tap <b>Edit</b> to add some.';
   $('#nextline').hidden = !!rws.length;
-  checkMini();
 }
 function buy(id) {
   const r = lib.rewards.find(x => x.id === id); if (!r) return;
@@ -666,8 +666,9 @@ let miniQueued = false;
 function checkMini() {
   if (miniQueued) return;
   miniQueued = true;
-  requestAnimationFrame(() => { miniQueued = false; setMini($('.score .bill').getBoundingClientRect().bottom <= $('#mini').offsetHeight); });
+  requestAnimationFrame(() => { miniQueued = false; updateMini(); });
 }
+function updateMini() { setMini($('.score .bill').getBoundingClientRect().bottom <= $('#mini').offsetHeight); }
 addEventListener('scroll', checkMini, { passive: true });
 // Fade the right edge of the chip row while there are more chips to scroll to.
 function fadeMini() { const r = $('#miniTreats'); r.classList.toggle('more', r.scrollLeft + r.clientWidth < r.scrollWidth - 2); }
@@ -705,7 +706,7 @@ function coinRain() {
     c.animate(frames, { duration: T * 1000, delay: i * 18, easing: 'linear', fill: 'both' }).onfinish = () => c.remove();
   }
 }
-// Pixel sparkles pop out around an element: the bill when points come in, a treat when it becomes affordable.
+// Pixel sparkles pop out around a treat when it becomes affordable.
 function sparkle(el, count = 6, waves = 1) {
   if (calm() || !el || !Element.prototype.animate) return;
   const w = el.offsetWidth, h = el.offsetHeight;
@@ -719,7 +720,14 @@ function sparkle(el, count = 6, waves = 1) {
     s.animate([{ transform: 'translate(0,0) scale(0)' }, { transform: `translate(${ox / 2}px,${oy / 2}px) scale(1.2)`, offset: .45 }, { transform: `translate(${ox}px,${oy}px) scale(0)` }], { duration: rand(500, 750), delay: Math.floor(i / count) * 450 + (i % count) * 60, easing: 'steps(5, end)', fill: 'both' }).onfinish = () => s.remove();
   }
 }
-const billCelebrate = () => sparkle(shownBill());
+// The bill does a little pixel hop when points come in.
+function billCelebrate() {
+  const bill = shownBill();
+  if (calm() || !bill || !bill.animate) return;
+  const h = miniOn ? 5 : 10;
+  bill.getAnimations().forEach(a => a.cancel());
+  bill.animate([{ transform: 'translateY(0)' }, { transform: `translateY(-${h}px)`, offset: .4 }, { transform: 'translateY(0)', offset: .75 }, { transform: 'translateY(-2px)', offset: .87 }, { transform: 'translateY(0)' }], { duration: 440, easing: 'steps(8, end)' });
+}
 
 function render() {
   if (!curStart) setCur();

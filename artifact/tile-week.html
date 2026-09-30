@@ -7,6 +7,7 @@
   --bg:#EFE9DF; --surface:#FBF8F3; --surface2:#F4EFE6; --ink:#2B2620; --muted:#6B6155; --line:#DDD3C4;
   --accent:#6F4E37; --accent-ink:#FFFFFF; --accent-soft:#EADFD2; --good:#46693A; --good-soft:#DFE8D5; --danger:#A8382C;
   /* Tiles: terracotta, ochre, sage, river stone, dusty heather, wheat. */
+  --wallet:#DDB48A; --wallet-deep:#BE8E62; --wallet-ink:#2B2620; --wallet-label:#5C4330; --coin:#E9C46F; --coin-edge:#B98E34;
   --c0:#E4AE92; --c1:#E6C685; --c2:#BFCDA3; --c3:#BFC8C6; --c4:#CDB5B8; --c5:#E6D7BC; --cink:#2B2620;
   --shadow:0 10px 30px rgba(43,38,32,.18); --tray-h:230px;
   --display:"Fraunces", Georgia, "Times New Roman", serif;
@@ -17,7 +18,9 @@
     color-scheme:dark;
     --bg:#1B1814; --surface:#25211C; --surface2:#2E2923; --ink:#EFE8DD; --muted:#A89D8E; --line:#3B352D;
     --accent:#D1AB86; --accent-ink:#1B1814; --accent-soft:#3A2F25; --good:#93B881; --good-soft:#26311F; --danger:#E5806F;
-    --c0:#6B3F2C; --c1:#6A5424; --c2:#3F4D2E; --c3:#37403F; --c4:#4B3A3E; --c5:#5A4C36; --cink:#F3ECE2;
+    --wallet:#6E4E33; --wallet-deep:#56391F; --wallet-ink:#F3ECE2; --wallet-label:#E3CBB0; --coin:#C9A24E; --coin-edge:#8C6A22;
+    --wallet:#6E4E33; --wallet-deep:#56391F; --wallet-ink:#F3ECE2; --wallet-label:#E3CBB0; --coin:#C9A24E; --coin-edge:#8C6A22;
+  --c0:#6B3F2C; --c1:#6A5424; --c2:#3F4D2E; --c3:#37403F; --c4:#4B3A3E; --c5:#5A4C36; --cink:#F3ECE2;
     --shadow:0 10px 30px rgba(0,0,0,.5);
   }
 }
@@ -57,9 +60,18 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 
 /* Score + rewards */
 .score{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:16px;align-items:start}
-.bal{display:grid;gap:2px;align-content:start}
+.bal{display:grid;gap:2px;align-content:start;isolation:isolate}
+/* The balance sits in a little leather wallet: stitched edge, a clasp tab, a coin peeking out. */
+.wallet{position:relative;justify-self:start;margin-top:10px;padding:14px 34px 12px 14px;border-radius:12px 12px 16px 16px;background:var(--wallet);color:var(--wallet-ink);box-shadow:0 2px 0 var(--wallet-deep)}
+.wallet::before{content:"";position:absolute;inset:4px;border:1.5px dashed color-mix(in srgb, var(--wallet-ink) 22%, transparent);border-radius:9px 9px 13px 13px;pointer-events:none}
+.wallet .clasp{position:absolute;right:-4px;top:50%;width:26px;height:22px;margin-top:-11px;border-radius:9px 5px 5px 9px;background:var(--wallet-deep)}
+.wallet .clasp::after{content:"";position:absolute;left:6px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:var(--coin)}
+.wallet .coin{position:absolute;left:18px;top:-9px;width:20px;height:20px;border-radius:50%;background:var(--coin);box-shadow:inset 0 0 0 2px var(--coin-edge), inset 0 0 0 4px var(--coin);z-index:-1}
+.wallet .pts span{color:var(--wallet-label)}
+.wallet .ptslab{color:var(--wallet-label);margin-top:4px}
+.bal .ptsnote{margin-top:8px}
 .bal .meta,.bal .nextline{margin-top:8px}
-.pts{font-family:var(--display);font-weight:500;font-size:44px;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.pts{font-family:var(--display);font-weight:500;font-size:40px;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
 .pts span{font-size:16px;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:4px}
 .meta{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;display:grid;gap:2px}
 .meta:empty{display:none}
@@ -138,20 +150,20 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 /* Tiles wrap into as many rows as they need; the tray scrolls vertically once it hits its max height. */
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;overflow-y:auto;overscroll-behavior:contain;padding:8px 16px 6px;min-height:0;flex:1}
 .tray.collapsed .tiles{display:none}
-@media (max-width:480px){ .tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px} .tile{height:92px!important;padding:9px!important} .tile .tn{font-size:13px!important} .tile .tp{font-size:20px!important} }
+@media (max-width:480px){ .tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px} .tile{height:62px!important;padding:8px 10px!important} .tile .tn{font-size:13px!important} .tile .tp{font-size:16px!important} }
 @media (max-width:340px){ .tiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
-.tile{position:relative;width:100%;min-width:0;height:112px;-webkit-touch-callout:none;border-radius:16px;border:0;padding:10px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;color:var(--cink);user-select:none;-webkit-user-select:none;transition:transform .15s, box-shadow .15s}
-.tile .tn{font-weight:500;font-size:14px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.tile .tp{font-family:var(--display);font-weight:500;font-size:24px;line-height:1;font-variant-numeric:tabular-nums}
-.tile .tp small{font-size:12px;font-weight:500;opacity:.7;margin-left:2px}
-.tile .pen{display:none;position:absolute;top:8px;right:8px;font-size:11px;font-weight:500;background:var(--ink);color:var(--bg);border-radius:6px;padding:1px 6px}
+.tile{position:relative;width:100%;min-width:0;height:68px;-webkit-touch-callout:none;border-radius:12px;border:0;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;color:var(--cink);user-select:none;-webkit-user-select:none;transition:transform .15s, box-shadow .15s}
+.tile .tn{font-weight:500;font-size:13.5px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tile .tp{align-self:flex-end;font-family:var(--display);font-weight:500;font-size:17px;line-height:1;font-variant-numeric:tabular-nums}
+.tile .tp small{font-size:11px;font-weight:500;opacity:.7;margin-left:2px}
+.tile .pen{display:none;position:absolute;top:6px;right:6px;font-size:11px;font-weight:500;background:var(--ink);color:var(--bg);border-radius:6px;padding:1px 6px}
 .tiles.editing .tile[data-tile]{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--ink)}
 .tiles.editing .tile .pen{display:block}
 .tiles.editing .tile .tn{padding-right:30px}
 .tile.selected{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--accent);transform:translateY(-2px)}
 .tile.lifted{opacity:.35}
-.tile.add{background:transparent;border:1.5px dashed var(--line);color:var(--muted);align-items:center;justify-content:center;text-align:center;font-weight:500;font-size:13px;gap:4px}
-.tile.add .plus{font-size:28px;line-height:1;font-weight:400}
+.tile.add{background:transparent;border:1.5px dashed var(--line);color:var(--muted);flex-direction:row;align-items:center;justify-content:center;text-align:center;font-weight:500;font-size:13px;gap:6px}
+.tile.add .plus{font-size:20px;line-height:1;font-weight:400}
 /* The visible label is plain text; a transparent native select on top opens the system picker.
    The select keeps a 16px font so iPhone doesn't zoom in when it opens. */
 .sortbtn{position:relative;display:inline-flex;align-items:center}
@@ -240,8 +252,12 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 
   <section class="score" aria-live="polite">
     <div class="bal">
-      <div class="pts" id="pts">0<span>pts</span></div>
-      <div class="ptslab">to spend</div>
+      <div class="wallet">
+        <span class="coin" aria-hidden="true"></span>
+        <div class="pts" id="pts">0<span>pts</span></div>
+        <div class="ptslab">to spend</div>
+        <span class="clasp" aria-hidden="true"></span>
+      </div>
       <div class="ptsnote" id="ptsnote" hidden></div>
       <div class="meta" id="meta"></div>
       <div class="nextline" id="dayline" hidden></div>

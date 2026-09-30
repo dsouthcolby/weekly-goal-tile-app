@@ -494,6 +494,17 @@ html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]) .t
 html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]) .tray-in{max-width:none}
 html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]) .taskbar .tray-head{max-width:1120px;width:100%;margin:0 auto;padding-inline:16px}
 html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]) .tiles{max-width:1120px;width:100%;margin:0 auto;padding-inline:16px}
+/* Wide screens: the tile tray floats as a window above the bottom edge, as wide as the content,
+   with the wallpaper showing all around it. */
+@media (min-width: 900px) and (min-aspect-ratio: 1/1){
+html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]) body::before{inset:0}
+html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]) .tray{left:max(16px,calc(50% - 544px));right:max(16px,calc(50% - 544px));bottom:16px;border-radius:8px 8px 0 0;padding-bottom:10px;box-shadow:0 0 0 1px #0831d9,0 8px 22px rgba(0,0,0,.3)}
+html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]) .taskbar{background:#0058E6;box-shadow:inset 0 1px #3D8BF5;border-radius:8px 7px 0 0}
+html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]) .taskbar .tray-head{max-width:none;padding-inline:12px}
+html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]) .tiles{max-width:none;padding-inline:12px}
+html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]) .wrap{padding-bottom:calc(var(--tray-h) + 44px)}
+html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]) .toast{bottom:calc(var(--tray-h) + 30px)}
+}
 </style>
 <script>
 // Pick the saved look before the page draws, so a Y2K or brown board never flashes the default XP look.

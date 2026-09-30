@@ -639,9 +639,9 @@ function removeItem(id) {
 function saveLib() { lib.updatedAt = Math.max(Date.now(), lib.updatedAt + 1); dirty.lib = true; changed(); }
 
 let toastT;
-function toast(msg) {
+function toast(msg, ms = 2000) {
   const el = $('#toast'); el.textContent = msg; el.classList.add('show');
-  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 2000);
+  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), ms);
 }
 
 // Push a tile's new name/points/colour into this calendar week's placements.
@@ -655,7 +655,7 @@ function applyTileToThisWeek(t) {
 }
 
 /* ---------- syncing ---------- */
-let adapter = null, syncing = false, syncAgain = false, syncState = 'local', syncTimer = null;
+let adapter = null, syncing = false, syncAgain = false, syncState = 'local', syncTimer = null, syncErr = '';
 function queueSync(ms = 700) {
   clearTimeout(syncTimer);
   if (adapter) syncTimer = setTimeout(syncNow, ms);
@@ -671,6 +671,8 @@ async function syncNow() {
     persist(); setSync(adapter && adapter.readOnly ? 'readonly' : 'ok');
   } catch (e) {
     persist();
+    syncErr = String((e && (e.detail || e.message)) || e || 'unknown error');
+    console.error('Sync failed:', e);
     setSync(e && e.auth ? 'auth' : (navigator.onLine === false || (e && e.offline)) ? 'offline' : 'error');
   } finally {
     syncing = false;
@@ -686,7 +688,7 @@ function renderSync() {
     ok: n ? 'Syncing…' : 'Synced',
     offline: n ? `Offline · ${n} change${n === 1 ? '' : 's'} to sync` : 'Offline',
     auth: 'Sign in to sync',
-    error: 'Couldn’t sync · Retry',
+    error: 'Couldn’t sync · tap for details',
     readonly: 'View only · changes stay in this browser',
   }[syncState];
   b.textContent = text;
@@ -696,6 +698,7 @@ function renderSync() {
 }
 $('#syncBtn').onclick = () => {
   if (syncState === 'auth' || (CLOUD && !acct)) openAuth();
+  else if (syncState === 'error') { toast(`Sync error: ${syncErr}. Retrying…`, 8000); syncNow(); }
   else syncNow();
 };
 window.addEventListener('online', () => { if (CLOUD && !sb) bootCloud(); else syncNow(); });
@@ -784,6 +787,7 @@ const loadScript = src => new Promise((ok, bad) => { const s = document.createEl
 function syncError(err) {
   const msg = String((err && (err.message || err.error_description)) || err || '');
   const e = new Error(msg);
+  e.detail = [err && err.code, msg, err && err.details, err && err.hint].filter(Boolean).join(' · ');
   e.auth = !!err && (err.status === 401 || err.code === 'PGRST301' || /jwt/i.test(msg));
   e.offline = /fetch|network|load failed/i.test(msg);
   return e;

@@ -446,7 +446,9 @@ const LS = {
   del(k) { try { localStorage.removeItem('tw2:' + k); } catch {} },
 };
 let lib = normLib(LS.get('lib') || structuredClone(SEED));
-let P = LS.get('places') || {};
+// Records saved by earlier versions can lack newer fields (e.g. "kind", added with the treat
+// menu). Normalize every record on load so each one has every field.
+let P = Object.fromEntries(Object.entries(LS.get('places') || {}).map(([id, r]) => [id, np({ ...r, id })]));
 let dirty = LS.get('dirty') || { lib: false, p: {} };
 let acct = LS.get('acct') || '';
 function persist() { LS.set('lib', lib); LS.set('places', P); LS.set('dirty', dirty); LS.set('acct', acct); }
@@ -694,8 +696,9 @@ async function syncNow() {
   } catch (e) {
     persist();
     syncErr = String((e && (e.detail || e.message)) || e || 'unknown error');
-    console.error('Sync failed:', e);
-    setSync(e && e.auth ? 'auth' : (navigator.onLine === false || (e && e.offline)) ? 'offline' : 'error');
+    const state = e && e.auth ? 'auth' : (navigator.onLine === false || (e && e.offline)) ? 'offline' : 'error';
+    if (state === 'error') console.error('Sync failed:', e);
+    setSync(state);
   } finally {
     syncing = false;
     if (syncAgain) { syncAgain = false; queueSync(100); }
@@ -815,7 +818,7 @@ function syncError(err) {
   return e;
 }
 function supabaseAdapter(uid) {
-  const row = p => ({ user_id: uid, id: p.id, kind: p.kind, week: p.week, day: p.day, tile_id: p.tileId, name: p.name, points: p.points, color: p.color, deleted: p.deleted, created_at: p.createdAt, updated_at: p.updatedAt });
+  const row = x => { const p = np(x); return { user_id: uid, id: p.id, kind: p.kind, week: p.week, day: p.day, tile_id: p.tileId, name: p.name, points: p.points, color: p.color, deleted: p.deleted, created_at: p.createdAt, updated_at: p.updatedAt }; };
   const fromRow = r => np({ id: r.id, kind: r.kind, week: r.week, day: r.day, tileId: r.tile_id, name: r.name, points: r.points, color: r.color, deleted: r.deleted, createdAt: r.created_at, updatedAt: r.updated_at });
   const check = res => { if (res.error) throw syncError(res.error); return res.data; };
   async function session() {

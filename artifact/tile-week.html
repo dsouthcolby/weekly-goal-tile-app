@@ -209,8 +209,10 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 
 /* ---------- Pixel look: square corners, pixel outlines, hard shadows, sparkles ---------- */
-html{overflow-x:clip}
-body{overflow-x:hidden;background:
+/* Stop sideways scrolling on the page itself (hidden for older browsers, clip where supported).
+   Not on body: that would make body its own scroll box, and window scrolling would stop working. */
+html{overflow-x:hidden;overflow-x:clip}
+body{background:
   radial-gradient(rgba(255,255,255,.9) 1.2px,transparent 1.7px) 0 0/24px 24px,
   radial-gradient(rgba(255,255,255,.7) 1px,transparent 1.4px) 12px 12px/24px 24px,
   linear-gradient(180deg,#EBE5F6,#DBE8F3 55%,#F8EAF2) fixed}
@@ -249,6 +251,20 @@ input,select{border:2px solid var(--line)}
 .treat{position:relative}
 .fx-spark{position:absolute;width:12px;height:12px;z-index:2;pointer-events:none;background:var(--coin);clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
 .fx-spark.white{background:#E58FB3}
+/* Once the treat bank scrolls off the top, a slim copy of it stays pinned there */
+.mini{position:fixed;left:0;right:0;top:0;z-index:15;background:var(--surface);border-bottom:2px solid var(--edge);padding-top:env(safe-area-inset-top,0px);transform:translateY(-110%);transition:transform .16s steps(4,end),visibility 0s .16s;visibility:hidden}
+.mini.on{transform:none;visibility:visible;transition-delay:0s}
+.mini-in{max-width:1120px;margin:0 auto;padding:0 16px;display:flex;align-items:center;gap:10px}
+.bill.mini-bill{flex:none;width:66px;height:34px;margin:0}
+.mini-bill .bill-art{width:66px;height:34px}
+.mini-bill .pts{width:64px;height:32px;font-size:10px}
+.mini-bill .pts.long{font-size:7px}
+.mini-treats{position:relative;flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;padding:12px 4px 12px 2px;scrollbar-width:none}
+.mini-treats::-webkit-scrollbar{display:none}
+.mini-treats.more{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
+.mtreat{flex:none;position:relative;display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:3px 9px;white-space:nowrap;font-size:12.5px;font-weight:500;line-height:1.2;border:2px solid var(--edge);border-radius:0;background:linear-gradient(#FFFFFF,#EEE9F7);color:var(--muted);box-shadow:2px 2px 0 var(--edge)}
+.mtreat.ready{background:linear-gradient(#B8467F,#A83871);border-color:var(--ink);color:#fff}
+.mtreat .tpr{font-size:11px;opacity:.85}
 </style>
 
 <div class="wrap">
@@ -287,6 +303,12 @@ input,select{border:2px solid var(--line)}
   </section>
 
   <div class="days" id="days"></div>
+</div>
+<div class="mini" id="mini" aria-hidden="true" inert>
+  <div class="mini-in">
+    <div class="bill mini-bill"><div class="pts" id="miniPts">0</div></div>
+    <div class="mini-treats" id="miniTreats"></div>
+  </div>
 </div>
 
 <div class="tray" id="tray">
@@ -568,7 +590,7 @@ function renderDayline(dayPts) {
   if (lib.dayMax > 0) { const n = dayPts.filter(p => p > lib.dayMax).length; if (n) parts.push(`${n} day${n === 1 ? '' : 's'} over the ${lib.dayMax} pt max`); }
   el.innerHTML = parts.join(' · '); el.hidden = !parts.length;
 }
-let readyBefore = null, treatsShown = null;
+let readyBefore = null, treatsShown = null, miniShown = null;
 function renderScore(items) {
   const bal = Math.max(0, balance()), earned = total(items), count = items.length;
   $('#pts').innerHTML = `${bal}<span>pts</span>`;
@@ -588,12 +610,24 @@ function renderScore(items) {
   // Only rebuilt when something changed, so a sparkle already playing isn't cut off by the next render.
   const treatsHtml = rws.map(r => { const ok = bal >= r.points; return `<button class="treat${ok ? ' ready' : ''}" type="button" data-buy="${esc(r.id)}" aria-label="${ok ? `Buy ${esc(r.name)} for ${r.points} points` : `${esc(r.name)}, ${r.points} points, ${r.points - bal} more needed`}"><span>${esc(r.name)}</span><span class="tpr">${r.points}</span></button>`; }).join('');
   if (treatsHtml !== treatsShown) { $('#rewards').innerHTML = treatsHtml; treatsShown = treatsHtml; }
+  // The pinned strip's copy: the balance and the treats as small chips.
+  $('#miniPts').textContent = bal;
+  $('#miniPts').classList.toggle('long', bal >= 1000);
+  const miniHtml = rws.map(r => { const ok = bal >= r.points; return `<button class="mtreat${ok ? ' ready' : ''}" type="button" data-buy="${esc(r.id)}" aria-label="${ok ? `Buy ${esc(r.name)} for ${r.points} points` : `${esc(r.name)}, ${r.points} points, ${r.points - bal} more needed`}"><span>${esc(r.name)}</span><span class="tpr">${r.points}</span></button>`; }).join('');
+  if (miniHtml !== miniShown) { $('#miniTreats').innerHTML = miniHtml; miniShown = miniHtml; }
+  fadeMini();
   // A treat that just became affordable (a tile placed, a purchase undone, a sync) sparkles.
   const ready = new Set(rws.filter(r => bal >= r.points).map(r => r.id));
-  if (readyBefore) for (const id of ready) if (!readyBefore.has(id)) sparkle(document.querySelector(`.treat[data-buy="${CSS.escape(id)}"]`), 7, 2);
+  if (readyBefore) for (const id of ready) if (!readyBefore.has(id)) {
+    const el = document.querySelector(`${miniOn ? '.mtreat' : '.treat'}[data-buy="${CSS.escape(id)}"]`);
+    // In the pinned strip, slide the row so the treat is in view before it sparkles.
+    if (miniOn && el) { const row = $('#miniTreats'); row.scrollLeft = Math.max(0, el.offsetLeft - (row.clientWidth - el.offsetWidth) / 2); }
+    sparkle(el, 7, 2);
+  }
   readyBefore = ready;
   $('#nextline').innerHTML = rws.length ? '' : 'No treats on the menu yet. Tap <b>Edit</b> to add some.';
   $('#nextline').hidden = !!rws.length;
+  checkMini();
 }
 function buy(id) {
   const r = lib.rewards.find(x => x.id === id); if (!r) return;
@@ -618,6 +652,30 @@ function confirmBuy(id) {
   $('#buyDlg').showModal();
 }
 $('#rewards').addEventListener('click', e => { const b = e.target.closest('[data-buy]'); if (b) confirmBuy(b.dataset.buy); });
+$('#miniTreats').addEventListener('click', e => { const b = e.target.closest('[data-buy]'); if (b) confirmBuy(b.dataset.buy); });
+// Show the pinned strip once the balance has scrolled up under where the strip sits.
+let miniOn = false;
+$('.mini-bill').prepend($('.bill-art').cloneNode(true));
+function setMini(on) {
+  if (on === miniOn) return;
+  miniOn = on;
+  const m = $('#mini');
+  m.classList.toggle('on', on); m.inert = !on; m.setAttribute('aria-hidden', String(!on));
+}
+let miniQueued = false;
+function checkMini() {
+  if (miniQueued) return;
+  miniQueued = true;
+  requestAnimationFrame(() => { miniQueued = false; setMini($('.score .bill').getBoundingClientRect().bottom <= $('#mini').offsetHeight); });
+}
+addEventListener('scroll', checkMini, { passive: true });
+// Fade the right edge of the chip row while there are more chips to scroll to.
+function fadeMini() { const r = $('#miniTreats'); r.classList.toggle('more', r.scrollLeft + r.clientWidth < r.scrollWidth - 2); }
+$('#miniTreats').addEventListener('scroll', fadeMini, { passive: true });
+addEventListener('resize', fadeMini);
+addEventListener('resize', checkMini);
+// Whichever bill is on screen: the pinned one while the strip shows, otherwise the big one.
+const shownBill = () => document.querySelector(miniOn ? '.mini-bill' : '.score .bill');
 $('#buyForm').addEventListener('submit', e => {
   e.preventDefault();
   const id = buyingId; buyingId = null;
@@ -631,7 +689,7 @@ const calm = () => window.matchMedia && matchMedia('(prefers-reduced-motion: red
 const rand = (a, b) => a + Math.random() * (b - a);
 // Gold pixel coins spring up out of the bill, flip as they fly, and fall off the screen.
 function coinRain() {
-  const bill = document.querySelector('.bill');
+  const bill = shownBill();
   if (calm() || !bill || !Element.prototype.animate) return;
   const r = bill.getBoundingClientRect(), x0 = r.left + r.width / 2, y0 = r.top + r.height / 2, fall = innerHeight - y0 + 40;
   for (let i = 0; i < 44; i++) {
@@ -661,7 +719,7 @@ function sparkle(el, count = 6, waves = 1) {
     s.animate([{ transform: 'translate(0,0) scale(0)' }, { transform: `translate(${ox / 2}px,${oy / 2}px) scale(1.2)`, offset: .45 }, { transform: `translate(${ox}px,${oy}px) scale(0)` }], { duration: rand(500, 750), delay: Math.floor(i / count) * 450 + (i % count) * 60, easing: 'steps(5, end)', fill: 'both' }).onfinish = () => s.remove();
   }
 }
-const billCelebrate = () => sparkle(document.querySelector('.bill'));
+const billCelebrate = () => sparkle(shownBill());
 
 function render() {
   if (!curStart) setCur();
@@ -1094,7 +1152,7 @@ window.addEventListener('pointermove', e => {
   if (day !== drag.over) { drag.over && drag.over.classList.remove('hover'); day && day.classList.add('hover'); drag.over = day; }
   // Auto-scroll the page when dragging near the top or just above the tray.
   const trayTop = $('#tray').getBoundingClientRect().top;
-  if (e.clientY < 90) window.scrollBy(0, -12);
+  if (e.clientY < (miniOn ? $('#mini').getBoundingClientRect().bottom : 0) + 90) window.scrollBy(0, -12);
   else if (e.clientY > trayTop - 30 && e.clientY < trayTop) window.scrollBy(0, 12);
 }, { passive: false });
 function endDrag(drop) {

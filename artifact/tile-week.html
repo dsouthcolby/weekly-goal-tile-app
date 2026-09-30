@@ -246,6 +246,7 @@ input,select{border:2px solid var(--line)}
 .bill .pts span{display:none}
 .ptslab{margin-top:8px}
 .fx-coin{position:fixed;left:0;top:0;width:12px;height:12px;z-index:80;pointer-events:none;background:var(--coin);box-shadow:inset 0 0 0 2px var(--coin-edge);clip-path:polygon(25% 0,75% 0,100% 25%,100% 75%,75% 100%,25% 100%,0 75%,0 25%)}
+.treat{position:relative}
 .fx-spark{position:absolute;width:12px;height:12px;z-index:2;pointer-events:none;background:var(--coin);clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
 .fx-spark.white{background:#E58FB3}
 </style>
@@ -567,6 +568,7 @@ function renderDayline(dayPts) {
   if (lib.dayMax > 0) { const n = dayPts.filter(p => p > lib.dayMax).length; if (n) parts.push(`${n} day${n === 1 ? '' : 's'} over the ${lib.dayMax} pt max`); }
   el.innerHTML = parts.join(' · '); el.hidden = !parts.length;
 }
+let readyBefore = null, treatsShown = null;
 function renderScore(items) {
   const bal = Math.max(0, balance()), earned = total(items), count = items.length;
   $('#pts').innerHTML = `${bal}<span>pts</span>`;
@@ -583,7 +585,13 @@ function renderScore(items) {
     + (lib.limit ? `<span><b>${count}</b> of <b>${lib.limit}</b> tiles</span>` : '');
   const rws = lib.rewards;
   // Each treat is a button: muted until you can afford it, filled when it's ready to buy.
-  $('#rewards').innerHTML = rws.map(r => { const ok = bal >= r.points; return `<button class="treat${ok ? ' ready' : ''}" type="button" data-buy="${esc(r.id)}" aria-label="${ok ? `Buy ${esc(r.name)} for ${r.points} points` : `${esc(r.name)}, ${r.points} points, ${r.points - bal} more needed`}"><span>${esc(r.name)}</span><span class="tpr">${r.points}</span></button>`; }).join('');
+  // Only rebuilt when something changed, so a sparkle already playing isn't cut off by the next render.
+  const treatsHtml = rws.map(r => { const ok = bal >= r.points; return `<button class="treat${ok ? ' ready' : ''}" type="button" data-buy="${esc(r.id)}" aria-label="${ok ? `Buy ${esc(r.name)} for ${r.points} points` : `${esc(r.name)}, ${r.points} points, ${r.points - bal} more needed`}"><span>${esc(r.name)}</span><span class="tpr">${r.points}</span></button>`; }).join('');
+  if (treatsHtml !== treatsShown) { $('#rewards').innerHTML = treatsHtml; treatsShown = treatsHtml; }
+  // A treat that just became affordable (a tile placed, a purchase undone, a sync) sparkles.
+  const ready = new Set(rws.filter(r => bal >= r.points).map(r => r.id));
+  if (readyBefore) for (const id of ready) if (!readyBefore.has(id)) sparkle(document.querySelector(`.treat[data-buy="${CSS.escape(id)}"]`), 7, 2);
+  readyBefore = ready;
   $('#nextline').innerHTML = rws.length ? '' : 'No treats on the menu yet. Tap <b>Edit</b> to add some.';
   $('#nextline').hidden = !!rws.length;
 }
@@ -626,7 +634,7 @@ function coinRain() {
   const bill = document.querySelector('.bill');
   if (calm() || !bill || !Element.prototype.animate) return;
   const r = bill.getBoundingClientRect(), x0 = r.left + r.width / 2, y0 = r.top + r.height / 2, fall = innerHeight - y0 + 40;
-  for (let i = 0; i < 18; i++) {
+  for (let i = 0; i < 44; i++) {
     const c = document.createElement('span');
     c.className = 'fx-coin';
     document.body.appendChild(c);
@@ -636,24 +644,24 @@ function coinRain() {
       const t = T * k / 16, flip = Math.cos(t * rand(14, 22));
       frames.push({ transform: `translate(${x0 + dx + vx * t - 6}px, ${y0 + vy * t + g * t * t / 2 - 6}px) scaleX(${flip.toFixed(2)})` });
     }
-    c.animate(frames, { duration: T * 1000, delay: i * 35, easing: 'linear', fill: 'both' }).onfinish = () => c.remove();
+    c.animate(frames, { duration: T * 1000, delay: i * 18, easing: 'linear', fill: 'both' }).onfinish = () => c.remove();
   }
 }
-// The bill shivers and a few sparkles pop out when points come in.
-function billCelebrate() {
-  const bill = document.querySelector('.bill');
-  if (calm() || !bill || !Element.prototype.animate) return;
-  bill.animate([{ transform: 'translate(0,0)' }, { transform: 'translate(-2px,0)' }, { transform: 'translate(2px,-1px)' }, { transform: 'translate(-2px,1px)' }, { transform: 'translate(2px,0)' }, { transform: 'translate(-1px,0)' }, { transform: 'translate(0,0)' }], { duration: 480, easing: 'steps(6, end)' });
-  for (let i = 0; i < 6; i++) {
+// Pixel sparkles pop out around an element: the bill when points come in, a treat when it becomes affordable.
+function sparkle(el, count = 6, waves = 1) {
+  if (calm() || !el || !Element.prototype.animate) return;
+  const w = el.offsetWidth, h = el.offsetHeight;
+  for (let i = 0; i < count * waves; i++) {
     const s = document.createElement('span');
     s.className = 'fx-spark' + (i % 2 ? ' white' : '');
-    const a = rand(0, Math.PI * 2), cx = 66 + Math.cos(a) * 62, cy = 34 + Math.sin(a) * 34;
+    const a = rand(0, Math.PI * 2), cx = w / 2 + Math.cos(a) * (w / 2 - 4), cy = h / 2 + Math.sin(a) * (h / 2);
     s.style.left = cx - 6 + 'px'; s.style.top = cy - 6 + 'px';
-    bill.appendChild(s);
+    el.appendChild(s);
     const ox = Math.cos(a) * 14, oy = Math.sin(a) * 10;
-    s.animate([{ transform: 'translate(0,0) scale(0)' }, { transform: `translate(${ox / 2}px,${oy / 2}px) scale(1.2)`, offset: .45 }, { transform: `translate(${ox}px,${oy}px) scale(0)` }], { duration: rand(500, 750), delay: i * 60, easing: 'steps(5, end)', fill: 'both' }).onfinish = () => s.remove();
+    s.animate([{ transform: 'translate(0,0) scale(0)' }, { transform: `translate(${ox / 2}px,${oy / 2}px) scale(1.2)`, offset: .45 }, { transform: `translate(${ox}px,${oy}px) scale(0)` }], { duration: rand(500, 750), delay: Math.floor(i / count) * 450 + (i % count) * 60, easing: 'steps(5, end)', fill: 'both' }).onfinish = () => s.remove();
   }
 }
+const billCelebrate = () => sparkle(document.querySelector('.bill'));
 
 function render() {
   if (!curStart) setCur();

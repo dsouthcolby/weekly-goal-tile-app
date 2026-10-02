@@ -124,6 +124,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .chip.open .p{display:inline}
 .chip.pop{animation:pop .35s ease}
 @media (max-width:899px){ .days{grid-template-columns:repeat(4,minmax(0,1fr))} .day{min-height:150px} }
+/* Minimised past days: just the title bar. On narrower screens today starts a fresh row below them. */
+.day.past-min{min-height:0;gap:0;align-self:start}
+.day.past-min > :not(.dh){display:none}
+@media (max-width:899px){ .day.today.after-min{grid-column-start:1} }
 @media (max-width:579px){ .days{grid-template-columns:repeat(2,minmax(0,1fr))} .day{min-height:112px} }
 @media (max-width:359px){
   .days{grid-template-columns:1fr}
@@ -255,6 +259,12 @@ html{overflow-x:hidden;overflow-x:clip}
 #setForm .looks{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 #setForm .look-opt{padding:5px 4px;gap:4px;font-size:11px;line-height:1.2}
 #setForm .look-opt i{height:18px}
+/* On/off switch in Settings */
+#setForm .field.inline input.switch{-webkit-appearance:none;appearance:none;justify-self:end;position:relative;width:46px;height:28px;padding:0;margin:0;border:0;border-radius:999px;background:var(--line);box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);cursor:pointer}
+#setForm .field.inline input.switch::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.35);transition:left .15s}
+#setForm .field.inline input.switch:checked{background:var(--accent)}
+#setForm .field.inline input.switch:checked::after{left:21px}
+#setForm .field.inline input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /* The look picker in Settings: a small sample of each look above its name */
 .looks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .look-opt{display:grid;gap:6px;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;font-size:12.5px;text-align:center}
@@ -440,6 +450,7 @@ html[data-look="classic"] #buyDlg .sheet::before{content:'Buy treat';margin:0 -1
 html[data-look="classic"] #buyDlg h2{background:none;color:#000;margin:6px 0 0;padding:0}
 html[data-look="classic"] input,html[data-look="classic"] select{border:0;border-radius:0;background:#fff;box-shadow:inset 1px 1px #808080,inset -1px -1px #fff;font-family:Tahoma, Verdana, "Segoe UI", sans-serif}
 
+html[data-look="classic"] .day.past-min{padding-bottom:2px}
 /* Minimise folds the treat bank to its title bar, as in the XP look */
 html[data-look="classic"] .score.min{padding:22px 0 0}
 html[data-look="classic"] .score.min > .bal,html[data-look="classic"] .score.min > .menu{display:none}
@@ -601,6 +612,7 @@ html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]):no
 html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]):not([data-look="classic"]) .mini::before{content:'Treat bank';display:block;padding:calc(3px + env(safe-area-inset-top, 0px)) 10px 3px;background:#0058E6;color:#fff;font:700 13px var(--title);text-shadow:none}
 html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]):not([data-look="classic"]) .mini-treats{padding:8px 4px 8px 2px}
 html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]):not([data-look="classic"]) .mtreat{font-size:12px}
+html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]):not([data-look="classic"]) .day.past-min{padding-bottom:0}
 /* Wide screens: a wide version of the hill-and-sky scene, header and address bar edge to edge,
    and everything inside the bars lined up with the content column. */
 @media (min-aspect-ratio: 1/1){html:not([data-look="y2k"]):not([data-look="brown"]):not([data-look="plain"]):not([data-look="classic"]) body::before{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%201600%20900%22%20preserveAspectRatio%3D%22xMidYMax%20slice%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22s%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%231B5FD0%22/%3E%3Cstop%20offset%3D%22.4%22%20stop-color%3D%22%234C8EE6%22/%3E%3Cstop%20offset%3D%22.72%22%20stop-color%3D%22%239CC6F3%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23CFE4F8%22/%3E%3C/linearGradient%3E%3ClinearGradient%20id%3D%22h%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%237CC94F%22/%3E%3Cstop%20offset%3D%22.25%22%20stop-color%3D%22%234FA932%22/%3E%3Cstop%20offset%3D%22.7%22%20stop-color%3D%22%23358C22%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%232A7419%22/%3E%3C/linearGradient%3E%3ClinearGradient%20id%3D%22b%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%236FB14E%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%233F8A2C%22/%3E%3C/linearGradient%3E%3Cfilter%20id%3D%22f%22%20x%3D%22-50%25%22%20y%3D%22-50%25%22%20width%3D%22200%25%22%20height%3D%22200%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%2214%22/%3E%3C/filter%3E%3Cfilter%20id%3D%22g%22%20x%3D%22-50%25%22%20y%3D%22-50%25%22%20width%3D%22200%25%22%20height%3D%22200%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%225%22/%3E%3C/filter%3E%3C/defs%3E%3Crect%20width%3D%221600%22%20height%3D%22900%22%20fill%3D%22url%28%23s%29%22/%3E%3Cg%20fill%3D%22%23fff%22%20opacity%3D%22.85%22%20filter%3D%22url%28%23f%29%22%3E%3Cellipse%20cx%3D%22220%22%20cy%3D%22150%22%20rx%3D%22190%22%20ry%3D%2234%22/%3E%3Cellipse%20cx%3D%22820%22%20cy%3D%22110%22%20rx%3D%22240%22%20ry%3D%2238%22/%3E%3Cellipse%20cx%3D%221340%22%20cy%3D%22210%22%20rx%3D%22210%22%20ry%3D%2234%22/%3E%3Cellipse%20cx%3D%22560%22%20cy%3D%22330%22%20rx%3D%22150%22%20ry%3D%2222%22/%3E%3Cellipse%20cx%3D%221150%22%20cy%3D%22400%22%20rx%3D%22130%22%20ry%3D%2220%22/%3E%3C/g%3E%3Cg%20fill%3D%22%23fff%22%20opacity%3D%22.9%22%20filter%3D%22url%28%23g%29%22%3E%3Cellipse%20cx%3D%22240%22%20cy%3D%22146%22%20rx%3D%22100%22%20ry%3D%2214%22/%3E%3Cellipse%20cx%3D%22800%22%20cy%3D%22106%22%20rx%3D%22120%22%20ry%3D%2216%22/%3E%3Cellipse%20cx%3D%221320%22%20cy%3D%22206%22%20rx%3D%22110%22%20ry%3D%2214%22/%3E%3C/g%3E%3Cpath%20d%3D%22M0%20610%20C%20260%20560%20520%20575%20820%20610%20S%201350%20650%201600%20620%20V900%20H0Z%22%20fill%3D%22url%28%23b%29%22/%3E%3Cpath%20d%3D%22M-40%20660%20C%20220%20540%20640%20520%20980%20590%20C%201200%20635%201420%20680%201640%20690%20V900%20H-40Z%22%20fill%3D%22url%28%23h%29%22/%3E%3Cpath%20d%3D%22M-40%20660%20C%20220%20540%20640%20520%20980%20590%20C%201200%20635%201420%20680%201640%20690%22%20fill%3D%22none%22%20stroke%3D%22%23A6DD7A%22%20stroke-width%3D%225%22%20opacity%3D%22.6%22%20filter%3D%22url%28%23g%29%22/%3E%3C/svg%3E")}}
@@ -738,6 +750,8 @@ try { const l = JSON.parse(localStorage.getItem('tw2:lib')), k = (l && l.look) |
     <div class="field inline"><label for="sStart">Week starts on</label>
       <select id="sStart"></select>
       <span class="help">The board clears at the start of each week. Past weeks stay in History.</span></div>
+    <div class="field inline"><label for="sFold">Minimise days that have passed</label><input id="sFold" class="switch" type="checkbox" role="switch">
+      <span class="help">Past days this week shrink to their title bar, so today is near the top.</span></div>
     <div class="field inline"><label for="sLimit">Tile limit per week</label><input id="sLimit" type="number" inputmode="numeric" min="0" max="200" placeholder="No limit"></div>
     <div class="row2">
       <div class="field inline"><label for="sTarget">Daily points target</label><input id="sTarget" type="number" inputmode="numeric" min="0" max="999" placeholder="No target"><span class="help">Days that reach it get a tick.</span></div>
@@ -839,12 +853,13 @@ function normLib(l) {
   out.rewards = [...out.rewards].sort((a, b) => a.points - b.points);
   if (!SORTS[out.sort]) out.sort = 'added';
   if (!LOOKS[out.look]) out.look = 'xp';
+  out.foldPast = !!out.foldPast;
   out.dayTarget = Math.max(0, Number(out.dayTarget) || 0);
   out.dayMax = Math.max(0, Number(out.dayMax) || 0);
   out.updatedAt = Number(l.updatedAt) || 0;
   return out;
 }
-const body = l => ({ tiles: l.tiles, rewards: l.rewards, weekStart: l.weekStart, limit: l.limit, sort: l.sort, dayTarget: l.dayTarget, dayMax: l.dayMax, look: l.look });
+const body = l => ({ tiles: l.tiles, rewards: l.rewards, weekStart: l.weekStart, limit: l.limit, sort: l.sort, dayTarget: l.dayTarget, dayMax: l.dayMax, look: l.look, foldPast: l.foldPast });
 const libBody = () => body(lib);
 
 // One record per tile placed on a day, or per treat bought (kind 'buy', tileId = the treat's id).
@@ -1153,12 +1168,14 @@ function render() {
   const dayPts = [0, 1, 2, 3, 4, 5, 6].map(i => total(items.filter(x => x.day === i)));
   renderDayline(dayPts);
   const days = $('#days'); days.innerHTML = '';
+  // This week, days that have passed can shrink to their title bar (a setting), so today is near the top.
+  const folding = lib.foldPast && offset === 0;
   for (let i = 0; i < 7; i++) {
-    const d = addDays(ws, i);
+    const d = addDays(ws, i), past = folding && iso(d) < today;
     const dayItems = items.filter(x => x.day === i), pts = dayPts[i];
     const met = lib.dayTarget > 0 && pts >= lib.dayTarget, over = lib.dayMax > 0 && pts > lib.dayMax;
     const el = document.createElement('div');
-    el.className = 'day' + (iso(d) === today ? ' today' : '') + (selectedTile ? ' armed' : '') + (met ? ' met' : '') + (over ? ' over' : '') + (dayItems.length ? '' : ' blank');
+    el.className = 'day' + (iso(d) === today ? ' today' : '') + (selectedTile ? ' armed' : '') + (met ? ' met' : '') + (over ? ' over' : '') + (dayItems.length ? '' : ' blank') + (past ? ' past-min' : '') + (folding && i > 0 && iso(d) === today ? ' after-min' : '');
     el.dataset.day = i;
     // "20 / 30 pts" against the daily max, or against the target when there's no max.
     const cap = lib.dayMax || lib.dayTarget;
@@ -1724,7 +1741,7 @@ $('#looks').addEventListener('click', e => {
 function saveSettings() {
   const ws = +$('#sStart').value, moved = ws !== lib.weekStart;
   const num = (id, max) => Math.max(0, Math.min(max, parseInt($(id).value, 10) || 0));
-  const next = { weekStart: ws, limit: num('#sLimit', 200), dayTarget: num('#sTarget', 999), dayMax: num('#sDayMax', 999) };
+  const next = { weekStart: ws, limit: num('#sLimit', 200), dayTarget: num('#sTarget', 999), dayMax: num('#sDayMax', 999), foldPast: $('#sFold').checked };
   // Show the value that was kept (clamped, or blank for none).
   $('#sLimit').value = next.limit || ''; $('#sTarget').value = next.dayTarget || ''; $('#sDayMax').value = next.dayMax || '';
   if (Object.keys(next).every(k => next[k] === lib[k])) return;
@@ -1732,7 +1749,7 @@ function saveSettings() {
   if (moved) { offset = 0; setCur(); alignWeeks(); }
   saveLib(); toast('Saved');
 }
-for (const id of ['#sStart', '#sLimit', '#sTarget', '#sDayMax']) $(id).addEventListener('change', saveSettings);
+for (const id of ['#sStart', '#sFold', '#sLimit', '#sTarget', '#sDayMax']) $(id).addEventListener('change', saveSettings);
 $('#setDlg').addEventListener('close', () => applyLook(lookNow()));
 function openSettings() {
   settingsAcct = acct;
@@ -1741,6 +1758,7 @@ function openSettings() {
   $('#sLimit').value = lib.limit || '';
   $('#sTarget').value = lib.dayTarget || '';
   $('#sDayMax').value = lib.dayMax || '';
+  $('#sFold').checked = lib.foldPast;
   renderAccount();
   $('#setDlg').showModal();
 }

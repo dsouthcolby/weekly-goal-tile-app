@@ -1,8 +1,8 @@
 // Keeps Weekly Tracker opening with no signal. The app's files are served from this cache first and
 // refreshed in the background, so a new version shows up the next time the app is opened.
 // Requests to Supabase are never cached.
-const CACHE = 'tile-week-v25';
-const SHELL = ['./', './index.html', './supabase.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+const CACHE = 'tile-week-v26';
+const SHELL = ['./', './index.html', './supabase.js', './manifest.webmanifest', './icon-32.png', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

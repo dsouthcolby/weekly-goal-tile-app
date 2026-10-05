@@ -244,6 +244,41 @@ html{overflow-x:hidden;overflow-x:clip}
 #setForm .looks{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 #setForm .look-opt{padding:5px 4px;gap:4px;font-size:11px;line-height:1.2}
 #setForm .look-opt i{height:18px}
+/* "Due" line above the days, and due badges on tray tiles */
+.dueline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px;padding:8px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-size:13px}
+.dueline .dl-lab{font-weight:700;color:var(--ink);margin-right:2px}
+.dl-item{display:inline-flex;align-items:baseline;gap:6px;border:1px solid transparent;border-radius:999px;padding:3px 10px;font:inherit;font-size:12.5px;cursor:pointer}
+.dl-item .dl-name{font-weight:700}
+.dl-item.due{background:#FFE7A8;border-color:#D9A21B;color:#4A3500}
+.dl-item.late{background:#C0322B;border-color:#8E1F1A;color:#fff}
+.tile .due{position:absolute;top:5px;right:5px;font-size:10.5px;font-weight:700;line-height:1;padding:3px 5px;border-radius:5px;pointer-events:none}
+.tile .due.due{background:#FFE7A8;color:#4A3500;box-shadow:inset 0 0 0 1px #D9A21B}
+.tile .due.late{background:#C0322B;color:#fff}
+.tile:has(.due) .tn{padding-right:44px}
+.tiles.editing .tile .due{display:none}
+/* Report */
+.rep{display:grid;gap:12px}
+.rrep{display:grid;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.rrep .rh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rrep .rh b{font-size:15px}
+.rdot{width:12px;height:12px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25);flex:none}
+.rf{font-size:12px;color:var(--muted)}
+.rs{margin-left:auto;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px}
+.rs.ok{background:var(--good-soft, #DFF1DA);color:var(--good)}
+.rs.due{background:#FFE7A8;color:#4A3500}
+.rs.late{background:#C0322B;color:#fff}
+.rstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:0}
+.rstats div{display:grid;gap:1px}
+.rstats dt{font-size:10.5px;color:var(--muted);letter-spacing:.02em}
+.rstats dd{margin:0;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+.rchart{display:block;width:100%;height:56px;overflow:visible}
+.rchart .rb path{fill:var(--accent);opacity:.55}
+.rchart .rb.now path,.rchart .rb.on path,.rchart .rb:hover path{opacity:1}
+.rchart .rb .zero{fill:var(--line)}
+.rchart .rb .hit{fill:transparent;cursor:pointer}
+.rchart .tgt{stroke:var(--ink);stroke-width:1.5;stroke-dasharray:4 3;opacity:.6;vector-effect:non-scaling-stroke}
+.raxis{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted)}
+.raxis .rcap{text-align:center;flex:1;color:var(--ink)}
 /* On/off switch in Settings */
 #setForm .field.inline input.switch{-webkit-appearance:none;appearance:none;justify-self:end;position:relative;width:46px;height:28px;padding:0;margin:0;border:0;border-radius:999px;background:var(--line);box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);cursor:pointer}
 #setForm .field.inline input.switch::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.35);transition:left .15s}
@@ -654,6 +689,7 @@ try { const l = JSON.parse(localStorage.getItem('tw2:lib')), k = (l && l.look) |
       <button class="sync" id="syncBtn" type="button" data-state="local">Saved on this device</button>
     </div>
     <div class="top-actions">
+      <button class="hicon" id="repBtn" type="button" aria-label="Report" title="Report"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16M7 16v-5M12 16V6M17 16v-8"/></svg></button>
       <button class="hicon" id="histBtn" type="button" aria-label="History" title="History"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></button>
       <button class="hicon" id="setBtn" type="button" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.88 9.87 L21.41 10.09 L21.41 13.91 L18.88 14.13 L18.37 15.36 L20.00 17.30 L17.30 20.00 L15.36 18.37 L14.13 18.88 L13.91 21.41 L10.09 21.41 L9.87 18.88 L8.64 18.37 L6.70 20.00 L4.00 17.30 L5.63 15.36 L5.12 14.13 L2.59 13.91 L2.59 10.09 L5.12 9.87 L5.63 8.64 L4.00 6.70 L6.70 4.00 L8.64 5.63 L9.87 5.12 L10.09 2.59 L13.91 2.59 L14.13 5.12 L15.36 5.63 L17.30 4.00 L20.00 6.70 L18.37 8.64 Z"/><circle cx="12" cy="12" r="3"/></svg></button>
     </div>
@@ -683,6 +719,7 @@ try { const l = JSON.parse(localStorage.getItem('tw2:lib')), k = (l && l.look) |
     </div>
   </section>
 
+  <div class="dueline" id="dueline" hidden></div>
   <div class="days" id="days"></div>
 </div>
 <div class="mini" id="mini" aria-hidden="true" inert>
@@ -704,6 +741,7 @@ try { const l = JSON.parse(localStorage.getItem('tw2:lib')), k = (l && l.look) |
     <h2 id="tileTitle">New tile</h2>
     <div class="field"><label for="tName">Name</label><input id="tName" maxlength="40" placeholder="e.g. Pilates class" required autocomplete="off"></div>
     <div class="field"><label for="tPts">Points</label><input id="tPts" type="number" inputmode="numeric" min="1" max="999" value="10" required></div>
+    <div class="field"><label for="tEvery">Do it every … days</label><input id="tEvery" type="number" inputmode="numeric" min="0" max="365" placeholder="No target"><span class="help">It’s flagged when it’s due or overdue. Leave blank for no target.</span></div>
     <div class="field"><span class="lab">Colour</span><div class="swatches" id="swatches"></div></div>
     <p class="help" id="tNote">Changes also apply to this tile wherever it’s placed this week. Past weeks keep their original values.</p>
     <p class="err" id="tErr" role="alert" hidden></p>
@@ -768,6 +806,14 @@ try { const l = JSON.parse(localStorage.getItem('tw2:lib')), k = (l && l.look) |
       <span class="help" id="acctNote" hidden></span>
     </div>
   </form>
+</dialog>
+
+<dialog id="repDlg">
+  <div class="sheet">
+    <h2 class="sethead"><span>Report</span><button class="btn" type="button" data-close>Done</button></h2>
+    <p class="help" id="repLead"></p>
+    <div class="rep" id="repList"></div>
+  </div>
 </dialog>
 
 <dialog id="histDlg">
@@ -972,6 +1018,30 @@ function weekStartDate(off) {
 }
 const setCur = () => { curStart = iso(weekStartDate(offset)); };
 const fmt = d => `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+// Whole days between two ISO dates (b − a), immune to daylight-saving changes.
+const isoDay = s => { const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d) / 864e5; };
+// Dates a tile was done, up to today: one entry per placement (a tile placed twice on a day counts twice).
+function doneDates(tileId) {
+  const today = iso(new Date()), out = [];
+  for (const p of Object.values(P)) {
+    if (p.deleted || p.kind !== 'tile' || p.tileId !== tileId) continue;
+    const d = iso(addDays(fromIso(p.week), p.day));
+    if (d <= today) out.push(d);
+  }
+  return out.sort();
+}
+// A tile with "every N days" is due when N days have passed since it was last done, overdue after that.
+function tileDue(t) {
+  const every = t.every | 0;
+  if (!every) return null;
+  const dates = doneDates(t.id), today = iso(new Date());
+  if (!dates.length) return { state: 'due', label: 'Due', text: 'not done yet' };
+  const since = isoDay(today) - isoDay(dates[dates.length - 1]);
+  if (since < every) return { state: 'ok', next: every - since };
+  if (since === every) return { state: 'due', label: 'Due', text: 'due today' };
+  const late = since - every;
+  return { state: 'late', label: `${late}d late`, text: `${late} day${late === 1 ? '' : 's'} overdue` };
+}
 const weekItems = start => Object.values(P).filter(p => p.week === start && !p.deleted && p.kind === 'tile').sort((a, b) => a.createdAt - b.createdAt);
 // Points to spend: everything earned, minus everything bought. Carries over from week to week.
 const balance = () => Object.values(P).reduce((s, p) => p.deleted ? s : s + (p.kind === 'buy' ? -p.points : p.points), 0);
@@ -1193,7 +1263,17 @@ function render() {
     days.appendChild(el);
   }
   renderTray(items.length);
+  renderDue();
   renderSync();
+}
+// Tiles that are due or overdue, worst first. Tapping one picks it up to place on a day.
+function renderDue() {
+  const el = $('#dueline');
+  const list = lib.tiles.map(t => ({ t, d: tileDue(t) })).filter(x => x.d && x.d.state !== 'ok')
+    .sort((a, b) => (b.d.state === 'late') - (a.d.state === 'late') || a.t.name.localeCompare(b.t.name));
+  el.hidden = !list.length || offset !== 0;
+  el.innerHTML = list.length ? `<span class="dl-lab">Due</span>` + list.map(({ t, d }) =>
+    `<button type="button" class="dl-item ${d.state}" data-due="${esc(t.id)}" aria-label="${esc(t.name)}, ${d.text}. Tap to place it."><span class="dl-name">${esc(t.name)}</span><span class="dl-when">${esc(d.text)}</span></button>`).join('') : '';
 }
 
 function renderTray(count) {
@@ -1212,7 +1292,7 @@ function renderTray(count) {
   else if (sel) head.innerHTML = `<span class="hint">Tap a day to add <b>${esc(sel.name)}</b></span><span class="btns"><button class="link" data-act="edit" type="button">Edit</button><button class="link" data-act="cancel" type="button">Done</button></span>`;
   else if (full) head.innerHTML = `<span class="hint">Weekly limit reached (${lib.limit} tiles)</span><span class="btns"><button class="link" data-act="settings" type="button">Change limit</button>${sortBtn}${editBtn}${hideBtn}</span>`;
   else head.innerHTML = `<span class="hint"></span><span class="btns">${sortBtn}${editBtn}${hideBtn}</span>`;
-  const tileBtn = t => `<button type="button" class="tile cc${t.color|0}${t.id === selectedTile ? ' selected' : ''}" data-tile="${esc(t.id)}"><span class="pen">Edit</span><span class="tn">${esc(t.name)}</span><span class="tp">${t.points}<small>pts</small></span></button>`;
+  const tileBtn = t => { const d = tileDue(t); return `<button type="button" class="tile cc${t.color|0}${t.id === selectedTile ? ' selected' : ''}" data-tile="${esc(t.id)}">${d && d.state !== 'ok' ? `<span class="due ${d.state}">${esc(d.label)}</span>` : ''}<span class="pen">Edit</span><span class="tn">${esc(t.name)}</span><span class="tp">${t.points}<small>pts</small></span></button>`; };
   $('#tiles').innerHTML = sortedTiles().map(tileBtn).join('') + `<button type="button" class="tile add" data-act="new"><span class="plus">+</span>New tile</button>`;
 }
 
@@ -1656,6 +1736,13 @@ daysEl.addEventListener('click', e => {
   if (openChip) { openChip = null; render(); }
 });
 
+$('#dueline').addEventListener('click', e => {
+  const b = e.target.closest('[data-due]');
+  if (!b) return;
+  selectedTile = b.dataset.due; openChip = null; editMode = false;
+  if (collapsed) { collapsed = false; try { localStorage.setItem('tw:ui:collapsed', ''); } catch {} }
+  render();
+});
 $('#prevW').onclick = () => { offset--; openChip = null; setCur(); render(); };
 $('#nextW').onclick = () => { offset++; openChip = null; setCur(); render(); };
 
@@ -1676,6 +1763,7 @@ function openTile(id) {
   $('#tileTitle').textContent = t ? 'Edit tile' : 'New tile';
   $('#tName').value = t ? t.name : '';
   $('#tPts').value = t ? t.points : 10;
+  $('#tEvery').value = t && t.every ? t.every : '';
   $('#tNote').hidden = !t; showTileErr('');
   tileColor = t ? (t.color | 0) : lib.tiles.length % 6;
   renderSwatches();
@@ -1686,6 +1774,7 @@ function showTileErr(msg) { const el = $('#tErr'); el.textContent = msg; el.hidd
 $('#tileForm').addEventListener('submit', e => {
   e.preventDefault();
   const name = $('#tName').value.trim(); const points = Math.max(1, Math.min(999, parseInt($('#tPts').value, 10) || 0));
+  const every = Math.max(0, Math.min(365, parseInt($('#tEvery').value, 10) || 0));
   if (!name) return;
   if (editingTile) {
     const old = lib.tiles.find(x => x.id === editingTile);
@@ -1694,10 +1783,10 @@ $('#tileForm').addEventListener('submit', e => {
     const placed = Object.values(P).filter(p => p.week === start && !p.deleted && p.kind === 'tile' && p.tileId === editingTile).length;
     const after = balance() + placed * (points - old.points);
     if (after < 0) { showTileErr(`That would leave you with ${after} pts, because this week’s ${old.name} tiles would be worth less and you’ve already spent those points. The lowest you can set it to now is ${Math.max(1, points - Math.floor(after / placed))}.`); return; }
-    const t = { ...old, name, points, color: tileColor };
+    const t = { ...old, name, points, color: tileColor, every };
     lib.tiles = lib.tiles.map(x => x.id === editingTile ? t : x);
     applyTileToThisWeek(t);
-  } else lib.tiles = [...lib.tiles, { id: rid(), name, points, color: tileColor }];
+  } else lib.tiles = [...lib.tiles, { id: rid(), name, points, color: tileColor, every }];
   $('#tileDlg').close(); saveLib();
   toast(editingTile ? 'Tile updated' : 'Tile added');
 });
@@ -1835,6 +1924,49 @@ $('#histList').addEventListener('click', e => {
   changed(); renderHistory(); toast(`Undid ${p.name} · ${p.points} pts back`);
 });
 $('#histBtn').onclick = () => { renderHistory(); $('#histDlg').showModal(); };
+
+// Report: how often each tile was done, with the last 12 weeks as a small bar chart.
+const REP_WEEKS = 12;
+function renderReport() {
+  const weeks = [...Array(REP_WEEKS)].map((_, i) => iso(weekStartDate(i - REP_WEEKS + 1)));
+  const thisWeek = weeks[REP_WEEKS - 1], first4 = weeks[REP_WEEKS - 4];
+  $('#repLead').textContent = lib.tiles.length ? `Times done, up to today. Bars show the last ${REP_WEEKS} weeks; tap one for its number.` : 'Add some tiles and place them on days to see how often you do them.';
+  $('#repList').innerHTML = lib.tiles.map(t => {
+    const placed = Object.values(P).filter(p => !p.deleted && p.kind === 'tile' && p.tileId === t.id);
+    const dates = doneDates(t.id);
+    const perWeek = weeks.map(w => placed.filter(p => p.week === w && iso(addDays(fromIso(p.week), p.day)) <= iso(new Date())).length);
+    const thisCount = perWeek[REP_WEEKS - 1], last4 = perWeek.slice(-4).reduce((a, b) => a + b, 0);
+    const weeksUsed = dates.length ? Math.max(1, Math.floor((isoDay(iso(new Date())) - isoDay(dates[0])) / 7) + 1) : 0;
+    const avg = weeksUsed ? (dates.length / weeksUsed) : 0;
+    const d = tileDue(t);
+    const target = t.every ? Math.min(7, 7 / t.every) : 0;   // times per week that "every N days" works out to
+    const max = Math.max(1, target, ...perWeek);
+    const W = 300, H = 56, gap = 2, bw = (W - gap * (REP_WEEKS - 1)) / REP_WEEKS;
+    const bars = perWeek.map((n, i) => {
+      const h = n ? Math.max(3, n / max * (H - 4)) : 0, x = i * (bw + gap), wk = fromIso(weeks[i]);
+      const label = `Week of ${wk.getDate()} ${MONTHS[wk.getMonth()]}: ${n} time${n === 1 ? '' : 's'}`;
+      return `<g class="rb${i === REP_WEEKS - 1 ? ' now' : ''}" data-label="${esc(label)}"><title>${esc(label)}</title><rect class="hit" x="${x}" y="0" width="${bw + gap}" height="${H}"/>${h ? `<path d="M${x},${H} V${H - h + 3} q0,-3 3,-3 h${bw - 6} q3,0 3,3 V${H} Z"/>` : `<rect class="zero" x="${x}" y="${H - 1}" width="${bw}" height="1"/>`}</g>`;
+    }).join('');
+    const ty = H - target / max * (H - 4);
+    const first = fromIso(weeks[0]);
+    const status = !d ? '' : d.state === 'ok' ? `<span class="rs ok">next in ${d.next} day${d.next === 1 ? '' : 's'}</span>` : `<span class="rs ${d.state}">${esc(d.text)}</span>`;
+    return `<div class="rrep">
+      <div class="rh"><span class="rdot cc${t.color | 0}" aria-hidden="true"></span><b>${esc(t.name)}</b>${t.every ? `<span class="rf">every ${t.every} day${t.every === 1 ? '' : 's'}</span>` : ''}${status}</div>
+      <dl class="rstats"><div><dt>This week</dt><dd>${thisCount}</dd></div><div><dt>Last 4 weeks</dt><dd>${last4}</dd></div><div><dt>All time</dt><dd>${dates.length}</dd></div><div><dt>Per week</dt><dd>${avg ? avg.toFixed(1) : '0'}</dd></div></dl>
+      <svg class="rchart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(t.name)}: ${perWeek.join(', ')} times in each of the last ${REP_WEEKS} weeks">${bars}${target ? `<line class="tgt" x1="0" x2="${W}" y1="${ty}" y2="${ty}"/>` : ''}</svg>
+      <div class="raxis"><span>${first.getDate()} ${MONTHS[first.getMonth()]}</span><span class="rcap" aria-live="polite">${target ? `dashed line: ${target % 1 ? target.toFixed(1) : target}× a week` : ''}</span><span>this week</span></div>
+    </div>`;
+  }).join('');
+}
+$('#repList').addEventListener('click', e => {
+  const g = e.target.closest('.rb');
+  if (!g) return;
+  const card = g.closest('.rrep');
+  card.querySelectorAll('.rb.on').forEach(x => x.classList.remove('on'));
+  g.classList.add('on');
+  card.querySelector('.rcap').textContent = g.dataset.label;
+});
+$('#repBtn').onclick = () => { renderReport(); $('#repDlg').showModal(); };
 
 /* ---------- layout: page padding follows the tray's height ---------- */
 const trayEl = $('#tray');

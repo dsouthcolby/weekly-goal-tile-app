@@ -106,13 +106,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .chip.open .p{display:inline}
 .chip.pop{animation:pop .35s ease}
 @media (max-width:899px){ .days{grid-template-columns:repeat(4,minmax(0,1fr))} .day{min-height:150px} }
-/* Minimised past days: just the title bar. On narrower screens today starts a fresh row below them. */
+/* Minimised days: just the title bar. Days keep their places; only the height changes. */
 .day.day-min{min-height:0;gap:0;align-self:start}
 .day.day-min > :not(.dh){display:none}
 .day .dh .dsum{margin-left:auto}
 .day-min-btn{flex:none;align-self:center;border:0;background:none;color:inherit;font:inherit;font-size:12px;line-height:1;padding:3px 4px;margin:-3px -4px -3px 2px;opacity:.65;cursor:pointer}
 .day-min-btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px;opacity:1}
-@media (max-width:899px){ .day.today.after-min{grid-column-start:1} }
 @media (max-width:579px){ .days{grid-template-columns:repeat(2,minmax(0,1fr))} .day{min-height:112px} }
 @media (max-width:359px){
   .days{grid-template-columns:1fr}
@@ -498,9 +497,11 @@ html[data-look="classic"] .hist .h{border:0;border-radius:0;background:#fff;box-
 html[data-look="classic"] .sw{border-radius:0}
 html[data-look="classic"] .sw[aria-pressed="true"]{border-color:#000080}
 html[data-look="classic"] .rrow .del,html[data-look="classic"] .chip .x,html[data-look="classic"] .tile .pen,html[data-look="classic"] .link.on,html[data-look="classic"] .look-opt,html[data-look="classic"] .look-opt i{border-radius:0}
-html[data-look="classic"] .chip .x,html[data-look="classic"] .tile .pen{background:#000080;color:#fff}
+html[data-look="classic"] .chip .x{background:#000080;color:#fff}
+html[data-look="classic"] .tile .pen{background:#EAF1FB;color:#1F3A75;box-shadow:inset 0 0 0 1px #7FA7E6}
+html[data-look="classic"] .tray-head .link.on{background:#EDEDED;color:#000;text-decoration:none;padding:4px 12px;box-shadow:inset -1px -1px #9a9a9a,inset 1px 1px #fff,0 0 0 1px #808080}
 html[data-look="classic"] .look-opt[aria-pressed="true"]{border-color:#000080;box-shadow:0 0 0 2px #000080}
-html[data-look="classic"] .tiles.editing .tile[data-tile]{box-shadow:0 0 0 2px #fff,0 0 0 3px #000080}
+html[data-look="classic"] .tiles.editing .tile[data-tile]{box-shadow:0 0 0 2px #fff,0 0 0 3px #7FA7E6}
 html[data-look="classic"] .tile.selected{box-shadow:0 0 0 2px #fff,0 0 0 4px #000080}
 html[data-look="classic"] .day.armed{outline:2px dashed #000080;outline-offset:1px}
 html[data-look="classic"] .day.hover{outline:2px solid #000080;outline-offset:1px;background:#F4F8FD}
@@ -1252,7 +1253,7 @@ function render() {
     const dayItems = items.filter(x => x.day === i), pts = dayPts[i];
     const met = lib.dayTarget > 0 && pts >= lib.dayTarget, over = lib.dayMax > 0 && pts > lib.dayMax;
     const el = document.createElement('div');
-    el.className = 'day' + (iso(d) === today ? ' today' : '') + (selectedTile ? ' armed' : '') + (met ? ' met' : '') + (over ? ' over' : '') + (dayItems.length ? '' : ' blank') + (past ? ' day-min' : '') + (i > 0 && iso(d) === today && isMin(addDays(ws, i - 1)) ? ' after-min' : '');
+    el.className = 'day' + (iso(d) === today ? ' today' : '') + (selectedTile ? ' armed' : '') + (met ? ' met' : '') + (over ? ' over' : '') + (dayItems.length ? '' : ' blank') + (past ? ' day-min' : '');
     el.dataset.day = i;
     // "20 / 30 pts" against the daily max, or against the target when there's no max.
     const cap = lib.dayMax || lib.dayTarget;

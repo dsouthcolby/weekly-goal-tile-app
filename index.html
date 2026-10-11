@@ -309,7 +309,7 @@ html{overflow-x:hidden;overflow-x:clip}
 .look-opt[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 .look-opt i{display:block;height:34px;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
 .ls-xp{background:linear-gradient(180deg,#0058EE 0 30%,#4C8EE6 30% 62%,#4FA932 62%)}
-.ls-y2k{background:linear-gradient(90deg,#C2E6F2 0 25%,#B8D8F2 25% 50%,#1A7AB8 50% 75%,#9FD0EA 75%)}
+.ls-y2k{background:linear-gradient(90deg,#C2E6F2 0 25%,#C6EA8C 25% 50%,#1A7AB8 50% 75%,#D6F0A8 75%)}
 .ls-classic{background:linear-gradient(180deg,#B9D5F2 0 30%,#EDEDED 30% 70%,#2D5FC4 70%)}
 .ls-brown{background:linear-gradient(90deg,#EFE9DF 0 40%,#6F4E37 40% 60%,#E4AE92 60% 80%,#BFCDA3 80%)}
 /* XP-only parts: the treat bank title bar and the taskbar wrapper */
@@ -332,13 +332,13 @@ html{overflow-x:hidden;overflow-x:clip}
 /* ---------- Y2K look: muted pastels, pixel fonts, square corners, pixel outlines, hard shadows ---------- */
 html[data-look="y2k"]{
   color-scheme:light;
-  /* Y2K in cyan blues: icy sky, cyan-blue accent. */
-  --bg:#D3EBF6; --surface:#FBFEFF; --surface2:#ECF6FB; --ink:#1F3A57; --muted:#4F6E8F; --line:#A9D0E3;
-  --accent:#1A7AB8; --accent-ink:#FFFFFF; --accent-soft:#D6ECF7; --good:#3F7A55; --good-soft:#D8EDDF; --danger:#B23A45;
-  --edge:#4F6E8F; /* pixel outlines and hard shadows */
-  /* Tiles: aqua, cornflower, periwinkle, sea glass, ice, sky. */
-  --bill:#C8E7C5; --bill-deep:#8DB894; --bill-oval:#EEF7EC; --bill-line:#3E6B4E; --coin:#F0C75E; --coin-edge:#A67C1B;
-  --c0:#C2E6F2; --c1:#B8D8F2; --c2:#CFE0F5; --c3:#B5E3E6; --c4:#D4ECF7; --c5:#9FD0EA; --cink:#1F3A57;
+  /* Y2K in aqua and lime: sky fading to lime, cyan-blue accent, lime treats. */
+  --bg:#DCEFE6; --surface:#FBFEFF; --surface2:#EEF8F0; --ink:#1F3A57; --muted:#4A6E62; --line:#B2D8C4;
+  --accent:#1A7AB8; --accent-ink:#FFFFFF; --accent-soft:#D6ECF7; --good:#3E7A12; --good-soft:#D8EDDF; --danger:#B23A45;
+  --edge:#4A7468; /* pixel outlines and hard shadows */
+  /* Tiles alternate aqua and lime. */
+  --bill:#D8F5A2; --bill-deep:#9CD443; --bill-oval:#F4FDE3; --bill-line:#3D6B10; --coin:#F0C75E; --coin-edge:#A67C1B;
+  --c0:#C2E6F2; --c1:#D6F0A8; --c2:#B8D8F2; --c3:#C6EA8C; --c4:#B5E3E6; --c5:#DDF3B8; --cink:#1F3A57;
   --shadow:4px 4px 0 var(--edge); --tray-h:230px;
   --arcade:"Press Start 2P", ui-monospace, monospace;
   --display:"Pixelify Sans", ui-monospace, monospace;
@@ -348,7 +348,7 @@ html[data-look="y2k"]{
 html[data-look="y2k"] body{background:
   radial-gradient(rgba(255,255,255,.9) 1.2px,transparent 1.7px) 0 0/24px 24px,
   radial-gradient(rgba(255,255,255,.7) 1px,transparent 1.4px) 12px 12px/24px 24px,
-  linear-gradient(180deg,#D3EBF6,#C4E3F3 55%,#DCEBFA) fixed}
+  linear-gradient(180deg,#D3EBF6,#DCF0DA 55%,#E4F5C8) fixed}
 html[data-look="y2k"] .iconbtn,html[data-look="y2k"] .hicon,html[data-look="y2k"] .score,html[data-look="y2k"] .day,html[data-look="y2k"] .treat,html[data-look="y2k"] .tile,html[data-look="y2k"] .chip,html[data-look="y2k"] .chip .x,html[data-look="y2k"] .tile .pen,html[data-look="y2k"] .tray,html[data-look="y2k"] .btn,html[data-look="y2k"] .sheet,html[data-look="y2k"] input,html[data-look="y2k"] select,html[data-look="y2k"] .auth-card,html[data-look="y2k"] .rrow,html[data-look="y2k"] .hist .h,html[data-look="y2k"] .sw,html[data-look="y2k"] .toast,html[data-look="y2k"] .link.on{border-radius:0}
 html[data-look="y2k"] .score,html[data-look="y2k"] .day,html[data-look="y2k"] .auth-card{border:2px solid var(--edge);box-shadow:var(--shadow)}
 html[data-look="y2k"] .day.blank{border:2px dashed var(--line);box-shadow:none;background:rgba(255,252,253,.55)}
@@ -359,7 +359,7 @@ html[data-look="y2k"] .chip{box-shadow:inset 0 0 0 2px rgba(53,45,87,.4)}
 html[data-look="y2k"] .tile{box-shadow:inset 0 0 0 2px rgba(53,45,87,.4),3px 3px 0 rgba(53,45,87,.4)}
 html[data-look="y2k"] .tile.add{box-shadow:none}
 html[data-look="y2k"] .treat{border:2px solid var(--edge);background:linear-gradient(#FFFFFF,#EEE9F7);color:var(--muted);box-shadow:2px 2px 0 var(--edge)}
-html[data-look="y2k"] .treat.ready{background:linear-gradient(#2386C6,#1773AE);border-color:var(--ink);color:#fff}
+html[data-look="y2k"] .treat.ready,html[data-look="y2k"] .mtreat.ready{background:linear-gradient(#B4E85C,#97D334);border-color:#3D6B10;color:#1F3A12}
 html[data-look="y2k"] .treat.edit{background:transparent;border:2px dashed var(--line);box-shadow:none}
 html[data-look="y2k"] .tray{border-top:2px solid var(--edge);box-shadow:none}
 html[data-look="y2k"] .sheet{border:2px solid var(--edge);border-bottom:0}

@@ -377,20 +377,15 @@ html[data-look="cobalt"] .brand{font-size:22px;font-weight:400;font-style:italic
 html[data-look="cobalt"] .weeknav .range{font-family:var(--display);font-style:italic}
 html[data-look="cobalt"] .day .dh .dn,html[data-look="cobalt"] .sheet h2{font-weight:400;font-style:italic}
 
-html[data-look="cobalt"] .bill{width:auto;height:auto;margin:0}
-html[data-look="cobalt"] .bill .bill-art{display:none}
-html[data-look="cobalt"] .bill .pts{position:static;width:auto;height:auto;display:block;font-family:var(--display);font-weight:400;font-style:italic;font-size:40px;line-height:1;letter-spacing:-.03em}
-html[data-look="cobalt"] .bill .pts.long{font-size:32px}
-html[data-look="cobalt"] .bill .pts span{display:inline;font-family:var(--body);font-style:normal;font-size:16px;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:4px}
+/* The pixel dollar bill, in sage and pine, with the balance in italic serif */
+html[data-look="cobalt"]{--bill:#D4EADF; --bill-deep:#62A28E; --bill-oval:#F3F9F6; --bill-line:#2F6F5E; --edge:#0F2552}
+html[data-look="cobalt"] .bill{margin:0 0 6px}
+html[data-look="cobalt"] .bill .pts{font-family:var(--display);font-weight:400;font-style:italic;font-size:24px}
+html[data-look="cobalt"] .bill .pts.long{font-size:18px}
 html[data-look="cobalt"] .score{grid-template-columns:minmax(0,1fr) minmax(0,1.35fr)}
-html[data-look="cobalt"] .ptslab{margin-top:6px}
-/* The number already says "pts", so the label is just "to spend", as it was */
-html[data-look="cobalt"] .ptsword{display:none}
 html[data-look="cobalt"] .mini{border-bottom:1px solid var(--line);box-shadow:0 6px 18px rgba(0,0,0,.12);transition:transform .2s ease,visibility 0s .2s}
-html[data-look="cobalt"] .bill.mini-bill{width:auto;height:auto;padding-right:4px}
-html[data-look="cobalt"] .mini-bill .pts{font-size:22px}
-html[data-look="cobalt"] .mini-bill .pts.long{font-size:18px}
-html[data-look="cobalt"] .mini-bill .pts span{font-size:12px}
+html[data-look="cobalt"] .mini-bill .pts{font-size:13px}
+html[data-look="cobalt"] .mini-bill .pts.long{font-size:10px}
 html[data-look="cobalt"] .mtreat{border:1.5px solid var(--line);border-radius:999px;background:var(--surface2);color:var(--muted);box-shadow:none}
 html[data-look="cobalt"] .mtreat.ready{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 

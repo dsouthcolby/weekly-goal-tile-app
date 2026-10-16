@@ -266,6 +266,17 @@ html{overflow-x:hidden;overflow-x:clip}
 .dueline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px;padding:8px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-size:13px}
 .dueline .dl-lab{font-weight:700;color:var(--ink);margin-right:2px}
 .dl-item{display:inline-flex;align-items:baseline;gap:6px;border:1px solid transparent;border-radius:999px;padding:3px 10px;font:inherit;font-size:12.5px;cursor:pointer}
+/* One row per due tile: tap the pill to place it, or delay it a day */
+.dl-row{display:flex;align-items:center;gap:8px;width:100%}
+.dl-row .dl-item{flex:0 1 auto;min-width:0;flex-wrap:wrap;text-align:left}
+.dl-delay,.dl-note{margin-left:auto;flex:none;font-size:12.5px}
+.dl-note{color:var(--muted)}
+.dl-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;width:100%;padding-top:6px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.dl-rest{display:grid;gap:6px;width:100%}
+.dl-rest b{font-family:var(--display);font-size:16px}
+.dl-rest .btn{justify-self:start}
+.restchip{justify-self:start;font-size:11px;font-weight:700;line-height:1;padding:3px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.tile .tp s{font-size:.6em;font-weight:500;opacity:.65;margin-right:3px}
 .dl-item .dl-name{font-weight:700}
 .dl-item.due{background:#FFE7A8;border-color:#D9A21B;color:#4A3500}
 .dl-item.late{background:#C0322B;border-color:#8E1F1A;color:#fff}
@@ -285,6 +296,7 @@ html{overflow-x:hidden;overflow-x:clip}
 .rs.ok{background:var(--good-soft, #DFF1DA);color:var(--good)}
 .rs.due{background:#FFE7A8;color:#4A3500}
 .rs.late{background:#C0322B;color:#fff}
+.rs.rest{background:var(--surface2);color:var(--muted)}
 .rstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:0}
 .rstats div{display:grid;gap:1px}
 .rstats dt{font-size:10.5px;color:var(--muted);letter-spacing:.02em}
@@ -701,6 +713,7 @@ try { const l = JSON.parse(localStorage.getItem('tw2:lib')), k = (l && l.look) |
   <div class="top">
     <div class="brandcol">
       <div class="brand">Weekly Tracker</div>
+      <span class="restchip" id="restChip" hidden>Resting</span>
       <button class="sync" id="syncBtn" type="button" data-state="local">Saved on this device</button>
     </div>
     <div class="top-actions">
@@ -795,6 +808,18 @@ try { const l = JSON.parse(localStorage.getItem('tw2:lib')), k = (l && l.look) |
   </form>
 </dialog>
 
+<dialog id="delayDlg">
+  <form class="sheet" id="delayForm" method="dialog">
+    <h2 id="delayTitle">Delay this tile?</h2>
+    <p class="help" id="delayText"></p>
+    <p class="help" id="delayNote"></p>
+    <div class="actions"><div class="right">
+      <button class="btn" type="button" data-close>Cancel</button>
+      <button class="btn primary" type="submit" id="delayOk">Delay</button>
+    </div></div>
+  </form>
+</dialog>
+
 <dialog id="setDlg">
   <form class="sheet" id="setForm" method="dialog">
     <h2 class="sethead"><span>Settings</span><button class="btn" type="button" id="setDone" data-close>Done</button></h2>
@@ -811,6 +836,8 @@ try { const l = JSON.parse(localStorage.getItem('tw2:lib')), k = (l && l.look) |
       <span class="help">The board clears at the start of each week. Past weeks stay in History.</span></div>
     <div class="field inline"><label for="sFold">Minimise days that have passed</label><input id="sFold" class="switch" type="checkbox" role="switch">
       <span class="help">Past days this week shrink to their title bar, so today is near the top.</span></div>
+    <div class="field inline"><label for="sRest">Rest mode</label><input id="sRest" class="switch" type="checkbox" role="switch">
+      <span class="help">For sick days. Due dates pause: nothing goes late, rewards don't shrink and delays are free.</span></div>
     <div class="field inline"><label for="sLimit">Tile limit per week</label><input id="sLimit" type="number" inputmode="numeric" min="0" max="200" placeholder="No limit"></div>
     <div class="row2">
       <div class="field inline"><label for="sTarget">Daily points target</label><input id="sTarget" type="number" inputmode="numeric" min="0" max="999" placeholder="No target"><span class="help">Days that reach it get a tick.</span></div>
@@ -924,12 +951,15 @@ function normLib(l) {
   out.look = lookId(out.look);
   if (!LOOKS[out.look]) out.look = 'xp';
   out.foldPast = !!out.foldPast;
+  // Rest periods (sick days): { from, to } as YYYY-MM-DD; to is '' while still resting.
+  const day = v => typeof v === 'string' && /^\d{4}-\d\d-\d\d$/.test(v);
+  out.rest = Array.isArray(l.rest) ? l.rest.filter(r => r && day(r.from)).map(r => ({ from: r.from, to: day(r.to) ? r.to : '' })).slice(-60) : [];
   out.dayTarget = Math.max(0, Number(out.dayTarget) || 0);
   out.dayMax = Math.max(0, Number(out.dayMax) || 0);
   out.updatedAt = Number(l.updatedAt) || 0;
   return out;
 }
-const body = l => ({ tiles: l.tiles, rewards: l.rewards, weekStart: l.weekStart, limit: l.limit, sort: l.sort, dayTarget: l.dayTarget, dayMax: l.dayMax, look: l.look, foldPast: l.foldPast });
+const body = l => ({ tiles: l.tiles, rewards: l.rewards, weekStart: l.weekStart, limit: l.limit, sort: l.sort, dayTarget: l.dayTarget, dayMax: l.dayMax, look: l.look, foldPast: l.foldPast, rest: l.rest });
 const libBody = () => body(lib);
 
 // One record per tile placed on a day, or per treat bought (kind 'buy', tileId = the treat's id).
@@ -1048,18 +1078,54 @@ function doneDates(tileId) {
   }
   return out.sort();
 }
-// A tile with "every N days" is due when N days have passed since it was last done, overdue after that.
+// Rest mode (sick days): rest days don't count toward anything being due.
+const resting = () => lib.rest.some(r => !r.to);
+const restOn = d => lib.rest.some(r => r.from <= d && (!r.to || d <= r.to));
+// Delays are saved as 'buy' records (so every version of the app subtracts their cost) with ids
+// starting "dly". A free weekly delay starts "dlyf-", a paid one "dly-".
+const isDelay = p => p.kind === 'buy' && p.id.startsWith('dly');
+const DELAY_FREE_PER_WEEK = 1;
+// A late tile earns a quarter less for each day late, down to a quarter of its points.
+const latePoints = (pts, late) => late > 0 ? Math.round(pts * Math.max(0.25, 1 - 0.25 * late)) : pts;
+// Days after `from` up to and including `to` that count toward a tile: not rest days, not days it was delayed.
+function countedDays(tileId, from, to) {
+  const delayed = new Set(Object.values(P).filter(p => !p.deleted && isDelay(p) && p.tileId === tileId).map(p => iso(addDays(fromIso(p.week), p.day))));
+  let n = 0;
+  for (let d = addDays(fromIso(from), 1), i = 0; iso(d) <= to && i < 3700; d = addDays(d, 1), i++) {
+    const k = iso(d);
+    if (!restOn(k) && !delayed.has(k)) n++;
+  }
+  return n;
+}
+// What a tile earns if done on a given day: full points unless it was late by then (rest days earn in full).
+function pointsOn(t, date) {
+  const every = t.every | 0;
+  if (!every || restOn(date)) return t.points;
+  const before = doneDates(t.id).filter(d => d < date);
+  if (!before.length) return t.points;
+  return latePoints(t.points, countedDays(t.id, before[before.length - 1], date) - every);
+}
+// A tile with "every N days" is due when N counted days have passed since it was last done, overdue after that.
 function tileDue(t) {
   const every = t.every | 0;
   if (!every) return null;
+  if (resting()) return { state: 'rest', label: 'Paused', text: 'paused while resting' };
   const dates = doneDates(t.id), today = iso(new Date());
-  if (!dates.length) return { state: 'due', label: 'Due', text: 'not done yet' };
-  const since = isoDay(today) - isoDay(dates[dates.length - 1]);
+  if (!dates.length) return { state: 'due', label: 'Due', text: 'not done yet', worth: t.points };
+  const since = countedDays(t.id, dates[dates.length - 1], today);
+  const delayed = Object.values(P).some(p => !p.deleted && isDelay(p) && p.tileId === t.id && iso(addDays(fromIso(p.week), p.day)) === today);
   if (since < every) return { state: 'ok', next: every - since };
-  if (since === every) return { state: 'due', label: 'Due', text: 'due today' };
+  if (since === every) return { state: 'due', label: 'Due', text: 'due today', worth: t.points, delayed };
   const late = since - every;
-  return { state: 'late', label: `${late}d late`, text: `${late} day${late === 1 ? '' : 's'} overdue` };
+  return { state: 'late', label: `${late}d late`, text: `${late} day${late === 1 ? '' : 's'} overdue`, worth: latePoints(t.points, late), delayed };
 }
+// The fee for delaying a tile today: free once a week, then half its points.
+function delayFee(t) {
+  const wk = iso(weekStartDate(0));
+  const used = Object.values(P).filter(p => !p.deleted && p.kind === 'buy' && p.id.startsWith('dlyf-') && p.week === wk).length;
+  return used < DELAY_FREE_PER_WEEK ? 0 : Math.ceil(t.points / 2);
+}
+const freeDelaysLeft = () => Math.max(0, DELAY_FREE_PER_WEEK - Object.values(P).filter(p => !p.deleted && p.kind === 'buy' && p.id.startsWith('dlyf-') && p.week === iso(weekStartDate(0))).length);
 const weekItems = start => Object.values(P).filter(p => p.week === start && !p.deleted && p.kind === 'tile').sort((a, b) => a.createdAt - b.createdAt);
 // Points to spend: everything earned, minus everything bought. Carries over from week to week.
 const balance = () => Object.values(P).reduce((s, p) => p.deleted ? s : s + (p.kind === 'buy' ? -p.points : p.points), 0);
@@ -1286,11 +1352,25 @@ function render() {
 // Tiles that are due or overdue, worst first. Tapping one picks it up to place on a day.
 function renderDue() {
   const el = $('#dueline');
+  $('#restChip').hidden = !resting();
+  if (resting()) {
+    const from = lib.rest.find(r => !r.to).from, today = iso(new Date());
+    const ago = isoDay(today) - isoDay(from);
+    const since = ago === 0 ? 'today' : ago === 1 ? 'yesterday' : ago < 7 ? DAYS_FULL[fromIso(from).getDay()] : fmt(fromIso(from));
+    el.hidden = offset !== 0;
+    el.innerHTML = `<div class="dl-rest"><b>Resting since ${since}</b><span class="help">Due dates are paused: nothing goes late, rewards don't shrink and there are no fees. Tiles you do still earn full points.</span><button type="button" class="btn primary" data-rest="off">I'm feeling better</button></div>`;
+    return;
+  }
   const list = lib.tiles.map(t => ({ t, d: tileDue(t) })).filter(x => x.d && x.d.state !== 'ok')
     .sort((a, b) => (b.d.state === 'late') - (a.d.state === 'late') || a.t.name.localeCompare(b.t.name));
   el.hidden = !list.length || offset !== 0;
-  el.innerHTML = list.length ? `<span class="dl-lab">Due</span>` + list.map(({ t, d }) =>
-    `<button type="button" class="dl-item ${d.state}" data-due="${esc(t.id)}" aria-label="${esc(t.name)}, ${d.text}. Tap to place it."><span class="dl-name">${esc(t.name)}</span><span class="dl-when">${esc(d.text)}</span></button>`).join('') : '';
+  const when = (t, d) => d.state === 'late' ? `${d.text} · earns ${d.worth} of ${t.points} pts` : `${d.text} · ${d.worth} pts`;
+  const left = freeDelaysLeft();
+  el.innerHTML = list.length ? `<span class="dl-lab">Due</span>` + list.map(({ t, d }) => `<div class="dl-row">`
+    + `<button type="button" class="dl-item ${d.state}" data-due="${esc(t.id)}" aria-label="${esc(t.name)}, ${d.text}. Tap to place it."><span class="dl-name">${esc(t.name)}</span><span class="dl-when">${esc(when(t, d))}</span></button>`
+    + (d.delayed ? `<span class="dl-note">Delayed today</span>` : d.text === 'not done yet' ? '' : `<button type="button" class="link dl-delay" data-delay="${esc(t.id)}">Delay</button>`)
+    + `</div>`).join('')
+    + `<div class="dl-foot"><span>${left ? `${left} free delay left this week` : 'Free delay used this week'}</span><button type="button" class="link" data-rest="on">Not well? Rest mode</button></div>` : '';
 }
 
 function renderTray(count) {
@@ -1309,7 +1389,7 @@ function renderTray(count) {
   else if (sel) head.innerHTML = `<span class="hint">Tap a day to add <b>${esc(sel.name)}</b></span><span class="btns"><button class="link" data-act="edit" type="button">Edit</button><button class="link" data-act="cancel" type="button">Done</button></span>`;
   else if (full) head.innerHTML = `<span class="hint">Weekly limit reached (${lib.limit} tiles)</span><span class="btns"><button class="link" data-act="settings" type="button">Change limit</button>${sortBtn}${editBtn}${hideBtn}</span>`;
   else head.innerHTML = `<span class="hint"></span><span class="btns">${sortBtn}${editBtn}${hideBtn}</span>`;
-  const tileBtn = t => { const d = tileDue(t); return `<button type="button" class="tile cc${t.color|0}${t.id === selectedTile ? ' selected' : ''}" data-tile="${esc(t.id)}">${d && d.state !== 'ok' ? `<span class="due ${d.state}">${esc(d.label)}</span>` : ''}<span class="pen">Edit</span><span class="tn">${esc(t.name)}</span><span class="tp">${t.points}<small>pts</small></span></button>`; };
+  const tileBtn = t => { const d = tileDue(t); return `<button type="button" class="tile cc${t.color|0}${t.id === selectedTile ? ' selected' : ''}" data-tile="${esc(t.id)}">${d && (d.state === 'due' || d.state === 'late') ? `<span class="due ${d.state}">${esc(d.label)}</span>` : ''}<span class="pen">Edit</span><span class="tn">${esc(t.name)}</span><span class="tp">${d && d.state === 'late' && d.worth < t.points ? `<s>${t.points}</s>${d.worth}` : t.points}<small>pts</small></span></button>`; };
   $('#tiles').innerHTML = sortedTiles().map(tileBtn).join('') + `<button type="button" class="tile add" data-act="new"><span class="plus">+</span>New tile</button>`;
 }
 
@@ -1323,7 +1403,8 @@ function addItem(tileId, day) {
   const before = balance();
   const dayBefore = total(weekItems(curStart).filter(x => x.day === Number(day)));
   const now = Date.now();
-  const item = np({ id: rid(), week: curStart, day, tileId: t.id, name: t.name, points: t.points, color: t.color, createdAt: now, updatedAt: now });
+  const pts = pointsOn(t, iso(addDays(fromIso(curStart), Number(day))));
+  const item = np({ id: rid(), week: curStart, day, tileId: t.id, name: t.name, points: pts, color: t.color, createdAt: now, updatedAt: now });
   P[item.id] = item; dirty.p[item.id] = 1;
   changed();
   const chip = document.querySelector(`[data-item="${item.id}"]`); if (chip) chip.classList.add('pop');
@@ -1331,7 +1412,8 @@ function addItem(tileId, day) {
   const after = before + item.points;
   const dayAfter = dayBefore + item.points, dayName = DAYS_FULL[addDays(fromIso(curStart), Number(day)).getDay()];
   const unlocked = lib.rewards.filter(r => before < r.points && after >= r.points);
-  toast(unlocked.length ? `You can now afford ${unlocked.map(r => r.name).join(', ')}`
+  toast(pts < t.points ? `${t.name} was late: ${pts} of ${t.points} pts`
+    : unlocked.length ? `You can now afford ${unlocked.map(r => r.name).join(', ')}`
     : lib.dayMax > 0 && dayAfter > lib.dayMax ? `${dayName} is over your daily max: ${dayAfter} / ${lib.dayMax} pts`
     : lib.dayTarget > 0 && dayBefore < lib.dayTarget && dayAfter >= lib.dayTarget ? `Daily target reached on ${dayName}`
     : `+${item.points} · ${t.name} on ${dayName}`);
@@ -1754,12 +1836,54 @@ daysEl.addEventListener('click', e => {
 });
 
 $('#dueline').addEventListener('click', e => {
+  const r = e.target.closest('[data-rest]'); if (r) { setRest(r.dataset.rest === 'on'); return; }
+  const dl = e.target.closest('[data-delay]'); if (dl) { confirmDelay(dl.dataset.delay); return; }
   const b = e.target.closest('[data-due]');
   if (!b) return;
   selectedTile = b.dataset.due; openChip = null; editMode = false;
   if (collapsed) { collapsed = false; try { localStorage.setItem('tw:ui:collapsed', ''); } catch {} }
   render();
 });
+// Delaying: today stops counting toward the tile, so it gets no later and its reward stops shrinking.
+let delayingId = null;
+function confirmDelay(id) {
+  const t = lib.tiles.find(x => x.id === id); if (!t) return;
+  const fee = delayFee(t), bal = balance();
+  delayingId = id;
+  $('#delayTitle').textContent = `Delay ${t.name}?`;
+  $('#delayText').textContent = `Today won't count toward ${t.name}, so it won't get any later or lose more points until tomorrow.`;
+  $('#delayNote').textContent = fee === 0 ? `Uses your free delay for this week.`
+    : bal >= fee ? `Your free delay this week is used, so this costs ${fee} pts (half of ${t.points}). Not well? Rest mode is free.`
+    : `Your free delay this week is used and this would cost ${fee} pts; you have ${Math.max(0, bal)}. Not well? Rest mode is free.`;
+  $('#delayOk').textContent = fee === 0 ? 'Use free delay' : `Delay for ${fee} pts`;
+  $('#delayOk').disabled = fee > bal;
+  $('#delayDlg').showModal();
+}
+$('#delayForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const t = lib.tiles.find(x => x.id === delayingId); delayingId = null;
+  $('#delayDlg').close();
+  if (!t) return;
+  const fee = delayFee(t);
+  if (fee > balance()) return;
+  const now = Date.now();
+  const p = np({ id: (fee ? 'dly-' : 'dlyf-') + rid(), kind: 'buy', week: iso(weekStartDate(0)), day: (new Date().getDay() - lib.weekStart + 7) % 7, tileId: t.id, name: `Delay: ${t.name}`, points: fee, createdAt: now, updatedAt: now });
+  P[p.id] = p; dirty.p[p.id] = 1;
+  changed();
+  toast(fee ? `Delayed ${t.name} · ${fee} pts` : `Delayed ${t.name} · free delay used`);
+});
+$('#delayDlg').addEventListener('close', () => { delayingId = null; });
+// Rest mode starts today; feeling better ends it yesterday, so today counts again.
+function setRest(on) {
+  if (on === resting()) return;
+  const today = iso(new Date()), y = iso(addDays(fromIso(today), -1));
+  const rest = lib.rest.map(r => ({ ...r }));
+  if (on) rest.push({ from: today, to: '' });
+  else { const r = rest.find(x => !x.to); r.to = y; if (r.to < r.from) rest.splice(rest.indexOf(r), 1); }
+  lib = { ...lib, rest };
+  if ($('#setDlg').open) $('#sRest').checked = on;
+  saveLib(); toast(on ? 'Resting · due dates paused' : 'Welcome back · due dates running again');
+}
 $('#prevW').onclick = () => { offset--; openChip = null; setCur(); render(); };
 $('#nextW').onclick = () => { offset++; openChip = null; setCur(); render(); };
 
@@ -1880,6 +2004,7 @@ function saveSettings() {
   saveLib(); toast('Saved');
 }
 for (const id of ['#sStart', '#sFold', '#sLimit', '#sTarget', '#sDayMax']) $(id).addEventListener('change', saveSettings);
+$('#sRest').addEventListener('change', () => setRest($('#sRest').checked));
 $('#setDlg').addEventListener('close', () => applyLook(lookNow()));
 function openSettings() {
   settingsAcct = acct;
@@ -1889,6 +2014,7 @@ function openSettings() {
   $('#sTarget').value = lib.dayTarget || '';
   $('#sDayMax').value = lib.dayMax || '';
   $('#sFold').checked = lib.foldPast;
+  $('#sRest').checked = resting();
   renderAccount();
   $('#setDlg').showModal();
 }
@@ -1922,12 +2048,15 @@ function renderHistory() {
   const weeks = Object.keys(byWeek).sort().reverse();
   list.innerHTML = weeks.length ? weeks.map(w => {
     const s = fromIso(w), tiles = byWeek[w].filter(p => p.kind === 'tile'), buys = byWeek[w].filter(p => p.kind === 'buy').sort((a, b) => a.createdAt - b.createdAt);
+    const treats = buys.filter(b => !isDelay(b)).length, delays = buys.length - treats;
+    const rested = [...Array(7)].map((_, i) => addDays(s, i)).filter(d => iso(d) <= iso(new Date()) && restOn(iso(d)));
+    const restLine = rested.length ? `Rested ${rested.length === 1 ? DAYS_FULL[rested[0].getDay()] : `${rested.length} days, ${DAYS_FULL[rested[0].getDay()]} to ${DAYS_FULL[rested[rested.length - 1].getDay()]}`}` : '';
     const earned = total(tiles);
     const names = {}; for (const t of tiles) names[t.name] = (names[t.name] || 0) + 1;
     const list = Object.entries(names).map(([n, c]) => esc(n) + (c > 1 ? ` ×${c}` : '')).join(', ');
     const weeksAway = Math.round((s - weekStartDate(0)) / 864e5 / 7);
-    return `<div class="h"><div>${fmt(s)} – ${fmt(addDays(s, 6))}${w === thisWeek ? ' · this week' : ''}<small>${tiles.length} tile${tiles.length === 1 ? '' : 's'} · ${buys.length ? `${buys.length} treat${buys.length === 1 ? '' : 's'} bought` : 'nothing bought'}</small>${list ? `<small>${list}</small>` : ''}${tiles.length ? `<button class="link" type="button" data-goto="${weeksAway}">Show on board</button>` : ''}</div><b>+${earned}</b>`
-      + (buys.length ? `<div class="hbuys">${buys.map(b => `<div class="hbuy"><span>${esc(b.name)} · −${b.points} pts</span>${w === thisWeek ? `<button class="link" type="button" data-undo="${esc(b.id)}">Undo</button>` : ''}</div>`).join('')}</div>` : '')
+    return `<div class="h"><div>${fmt(s)} – ${fmt(addDays(s, 6))}${w === thisWeek ? ' · this week' : ''}<small>${tiles.length} tile${tiles.length === 1 ? '' : 's'} · ${treats ? `${treats} treat${treats === 1 ? '' : 's'} bought` : 'nothing bought'}${delays ? ` · ${delays} delay${delays === 1 ? '' : 's'}` : ''}</small>${restLine ? `<small>${restLine}</small>` : ''}${list ? `<small>${list}</small>` : ''}${tiles.length ? `<button class="link" type="button" data-goto="${weeksAway}">Show on board</button>` : ''}</div><b>+${earned}</b>`
+      + (buys.length ? `<div class="hbuys">${buys.map(b => `<div class="hbuy"><span>${esc(b.name)} · ${isDelay(b) && !b.points ? 'free delay' : `−${b.points} pts`}</span>${w === thisWeek ? `<button class="link" type="button" data-undo="${esc(b.id)}">Undo</button>` : ''}</div>`).join('')}</div>` : '')
       + `</div>`;
   }).join('') : '<p class="muted">Nothing logged yet. Each week you log tiles or buy treats shows up here.</p>';
   $('#histBal').textContent = `${Math.max(0, balance())} pts to spend`;
@@ -1938,7 +2067,7 @@ $('#histList').addEventListener('click', e => {
   const u = e.target.closest('[data-undo]'); if (!u) return;
   const p = P[u.dataset.undo]; if (!p || p.deleted) return;
   P[p.id] = { ...p, deleted: true, updatedAt: Math.max(Date.now(), p.updatedAt + 1) }; dirty.p[p.id] = 1;
-  changed(); renderHistory(); toast(`Undid ${p.name} · ${p.points} pts back`);
+  changed(); renderHistory(); toast(isDelay(p) ? `Undid ${p.name}${p.points ? ` · ${p.points} pts back` : ''}` : `Undid ${p.name} · ${p.points} pts back`);
 });
 $('#histBtn').onclick = () => { renderHistory(); $('#histDlg').showModal(); };
 
@@ -1966,7 +2095,7 @@ function renderReport() {
     }).join('');
     const ty = H - target / max * (H - 4);
     const first = fromIso(weeks[0]);
-    const status = !d ? '' : d.state === 'ok' ? `<span class="rs ok">next in ${d.next} day${d.next === 1 ? '' : 's'}</span>` : `<span class="rs ${d.state}">${esc(d.text)}</span>`;
+    const status = !d ? '' : d.state === 'rest' ? `<span class="rs rest">paused while resting</span>` : d.state === 'ok' ? `<span class="rs ok">next in ${d.next} day${d.next === 1 ? '' : 's'}</span>` : `<span class="rs ${d.state}">${esc(d.text)}</span>`;
     return `<div class="rrep">
       <div class="rh"><span class="rdot cc${t.color | 0}" aria-hidden="true"></span><b>${esc(t.name)}</b>${t.every ? `<span class="rf">every ${t.every} day${t.every === 1 ? '' : 's'}</span>` : ''}${status}</div>
       <dl class="rstats"><div><dt>This week</dt><dd>${thisCount}</dd></div><div><dt>Last 4 weeks</dt><dd>${last4}</dd></div><div><dt>All time</dt><dd>${dates.length}</dd></div><div><dt>Per week</dt><dd>${avg ? avg.toFixed(1) : '0'}</dd></div></dl>

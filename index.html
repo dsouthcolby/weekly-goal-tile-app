@@ -812,7 +812,6 @@ try { const l = JSON.parse(localStorage.getItem('tw2:lib')), k = (l && l.look) |
   <form class="sheet" id="delayForm" method="dialog">
     <h2 id="delayTitle">Delay this tile?</h2>
     <p class="help" id="delayText"></p>
-    <p class="help" id="delayNote"></p>
     <div class="actions"><div class="right">
       <button class="btn" type="button" data-close>Cancel</button>
       <button class="btn primary" type="submit" id="delayOk">Delay</button>
@@ -837,7 +836,7 @@ try { const l = JSON.parse(localStorage.getItem('tw2:lib')), k = (l && l.look) |
     <div class="field inline"><label for="sFold">Minimise days that have passed</label><input id="sFold" class="switch" type="checkbox" role="switch">
       <span class="help">Past days this week shrink to their title bar, so today is near the top.</span></div>
     <div class="field inline"><label for="sRest">Rest mode</label><input id="sRest" class="switch" type="checkbox" role="switch">
-      <span class="help">For sick days. Due dates pause: nothing goes late, rewards don't shrink and delays are free.</span></div>
+      <span class="help">For sick days: pauses due dates and fees.</span></div>
     <div class="field inline"><label for="sLimit">Tile limit per week</label><input id="sLimit" type="number" inputmode="numeric" min="0" max="200" placeholder="No limit"></div>
     <div class="row2">
       <div class="field inline"><label for="sTarget">Daily points target</label><input id="sTarget" type="number" inputmode="numeric" min="0" max="999" placeholder="No target"><span class="help">Days that reach it get a tick.</span></div>
@@ -1117,7 +1116,7 @@ function tileDue(t) {
   if (since < every) return { state: 'ok', next: every - since };
   if (since === every) return { state: 'due', label: 'Due', text: 'due today', worth: t.points, delayed };
   const late = since - every;
-  return { state: 'late', label: `${late}d late`, text: `${late} day${late === 1 ? '' : 's'} overdue`, worth: latePoints(t.points, late), delayed };
+  return { state: 'late', late, label: `${late}d late`, text: `${late} day${late === 1 ? '' : 's'} overdue`, worth: latePoints(t.points, late), delayed };
 }
 // The fee for delaying a tile today: free once a week, then half its points.
 function delayFee(t) {
@@ -1358,19 +1357,19 @@ function renderDue() {
     const ago = isoDay(today) - isoDay(from);
     const since = ago === 0 ? 'today' : ago === 1 ? 'yesterday' : ago < 7 ? DAYS_FULL[fromIso(from).getDay()] : fmt(fromIso(from));
     el.hidden = offset !== 0;
-    el.innerHTML = `<div class="dl-rest"><b>Resting since ${since}</b><span class="help">Due dates are paused: nothing goes late, rewards don't shrink and there are no fees. Tiles you do still earn full points.</span><button type="button" class="btn primary" data-rest="off">I'm feeling better</button></div>`;
+    el.innerHTML = `<div class="dl-rest"><b>Resting since ${since}</b><span class="help">Nothing goes late. Tiles earn full points.</span><button type="button" class="btn primary" data-rest="off">I'm better</button></div>`;
     return;
   }
   const list = lib.tiles.map(t => ({ t, d: tileDue(t) })).filter(x => x.d && x.d.state !== 'ok')
     .sort((a, b) => (b.d.state === 'late') - (a.d.state === 'late') || a.t.name.localeCompare(b.t.name));
   el.hidden = !list.length || offset !== 0;
-  const when = (t, d) => d.state === 'late' ? `${d.text} · earns ${d.worth} of ${t.points} pts` : `${d.text} · ${d.worth} pts`;
+  const when = (t, d) => d.state === 'late' ? `${d.late}d late · ${d.worth} of ${t.points} pts` : `${d.text === 'due today' ? 'today' : d.text} · ${d.worth} pts`;
   const left = freeDelaysLeft();
   el.innerHTML = list.length ? `<span class="dl-lab">Due</span>` + list.map(({ t, d }) => `<div class="dl-row">`
     + `<button type="button" class="dl-item ${d.state}" data-due="${esc(t.id)}" aria-label="${esc(t.name)}, ${d.text}. Tap to place it."><span class="dl-name">${esc(t.name)}</span><span class="dl-when">${esc(when(t, d))}</span></button>`
-    + (d.delayed ? `<span class="dl-note">Delayed today</span>` : d.text === 'not done yet' ? '' : `<button type="button" class="link dl-delay" data-delay="${esc(t.id)}">Delay</button>`)
+    + (d.delayed ? `<span class="dl-note">Delayed</span>` : d.text === 'not done yet' ? '' : `<button type="button" class="link dl-delay" data-delay="${esc(t.id)}">Delay</button>`)
     + `</div>`).join('')
-    + `<div class="dl-foot"><span>${left ? `${left} free delay left this week` : 'Free delay used this week'}</span><button type="button" class="link" data-rest="on">Not well? Rest mode</button></div>` : '';
+    + `<div class="dl-foot"><span>${left ? `${left} free delay left` : 'Free delay used'}</span><button type="button" class="link" data-rest="on">Rest mode</button></div>` : '';
 }
 
 function renderTray(count) {
@@ -1412,7 +1411,7 @@ function addItem(tileId, day) {
   const after = before + item.points;
   const dayAfter = dayBefore + item.points, dayName = DAYS_FULL[addDays(fromIso(curStart), Number(day)).getDay()];
   const unlocked = lib.rewards.filter(r => before < r.points && after >= r.points);
-  toast(pts < t.points ? `${t.name} was late: ${pts} of ${t.points} pts`
+  toast(pts < t.points ? `${t.name}, late: ${pts} of ${t.points} pts`
     : unlocked.length ? `You can now afford ${unlocked.map(r => r.name).join(', ')}`
     : lib.dayMax > 0 && dayAfter > lib.dayMax ? `${dayName} is over your daily max: ${dayAfter} / ${lib.dayMax} pts`
     : lib.dayTarget > 0 && dayBefore < lib.dayTarget && dayAfter >= lib.dayTarget ? `Daily target reached on ${dayName}`
@@ -1851,11 +1850,9 @@ function confirmDelay(id) {
   const fee = delayFee(t), bal = balance();
   delayingId = id;
   $('#delayTitle').textContent = `Delay ${t.name}?`;
-  $('#delayText').textContent = `Today won't count toward ${t.name}, so it won't get any later or lose more points until tomorrow.`;
-  $('#delayNote').textContent = fee === 0 ? `Uses your free delay for this week.`
-    : bal >= fee ? `Your free delay this week is used, so this costs ${fee} pts (half of ${t.points}). Not well? Rest mode is free.`
-    : `Your free delay this week is used and this would cost ${fee} pts; you have ${Math.max(0, bal)}. Not well? Rest mode is free.`;
-  $('#delayOk').textContent = fee === 0 ? 'Use free delay' : `Delay for ${fee} pts`;
+  $('#delayText').textContent = 'Pauses it for today: no later, no more points lost. '
+    + (fee === 0 ? 'Free (1 a week).' : bal >= fee ? `Costs ${fee} pts. Sick? Rest mode is free.` : `Costs ${fee} pts; you have ${Math.max(0, bal)}. Sick? Rest mode is free.`);
+  $('#delayOk').textContent = fee === 0 ? 'Delay free' : `Delay · ${fee} pts`;
   $('#delayOk').disabled = fee > bal;
   $('#delayDlg').showModal();
 }
@@ -1870,7 +1867,7 @@ $('#delayForm').addEventListener('submit', e => {
   const p = np({ id: (fee ? 'dly-' : 'dlyf-') + rid(), kind: 'buy', week: iso(weekStartDate(0)), day: (new Date().getDay() - lib.weekStart + 7) % 7, tileId: t.id, name: `Delay: ${t.name}`, points: fee, createdAt: now, updatedAt: now });
   P[p.id] = p; dirty.p[p.id] = 1;
   changed();
-  toast(fee ? `Delayed ${t.name} · ${fee} pts` : `Delayed ${t.name} · free delay used`);
+  toast(fee ? `Delayed ${t.name} · −${fee} pts` : `Delayed ${t.name} · free`);
 });
 $('#delayDlg').addEventListener('close', () => { delayingId = null; });
 // Rest mode starts today; feeling better ends it yesterday, so today counts again.
@@ -1882,7 +1879,7 @@ function setRest(on) {
   else { const r = rest.find(x => !x.to); r.to = y; if (r.to < r.from) rest.splice(rest.indexOf(r), 1); }
   lib = { ...lib, rest };
   if ($('#setDlg').open) $('#sRest').checked = on;
-  saveLib(); toast(on ? 'Resting · due dates paused' : 'Welcome back · due dates running again');
+  saveLib(); toast(on ? 'Resting' : 'Rest mode off');
 }
 $('#prevW').onclick = () => { offset--; openChip = null; setCur(); render(); };
 $('#nextW').onclick = () => { offset++; openChip = null; setCur(); render(); };

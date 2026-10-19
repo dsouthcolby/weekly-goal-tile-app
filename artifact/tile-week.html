@@ -1312,7 +1312,7 @@ function render() {
     const dayItems = items.filter(x => x.day === i), pts = dayPts[i];
     const met = lib.dayTarget > 0 && pts >= lib.dayTarget, over = lib.dayMax > 0 && pts > lib.dayMax;
     const el = document.createElement('div');
-    el.className = 'day' + (iso(d) === today ? ' today' : '') + (selectedTile ? ' armed' : '') + (met ? ' met' : '') + (over ? ' over' : '') + (dayItems.length ? '' : ' blank') + (past ? ' day-min' : '');
+    el.className = 'day' + (iso(d) === today ? ' today' : '') + (selectedTile ? ' armed' : '') + (met ? ' met' : '') + (over ? ' over' : '') + (dayItems.length || iso(d) === today ? '' : ' blank') + (past ? ' day-min' : '');
     el.dataset.day = i;
     // "20 / 30 pts" against the daily max, or against the target when there's no max.
     const cap = lib.dayMax || lib.dayTarget;

@@ -67,6 +67,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .goalbar span{position:relative;display:flex;justify-content:space-between;align-items:center;gap:8px;height:100%;padding:0 10px}
 .goalbar b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .goalbar em{flex:none;font-style:normal;color:var(--muted)}
+.score.min > .goalbar{display:none}
 .goalbar.pop{animation:goalpop 1.4s ease}
 @keyframes goalpop{30%{box-shadow:0 0 0 3px #FFD84A,0 0 16px 5px rgba(255,200,40,.6)}}
 .treat.edit{background:transparent;border-style:dashed;color:var(--muted)}
@@ -1190,7 +1191,7 @@ function renderScore(items) {
   $('#nextline').innerHTML = lib.rewards.length ? '' : 'No treats on the menu yet. Tap <b>Edit</b> to add some.';
   $('#nextline').hidden = !!lib.rewards.length;
 }
-// The goal is your most expensive treat, shown as a strip that fills as you earn. Once you can
+// The goal is your most expensive treat (even if it is the only one), shown as a strip that fills as you earn. Once you can
 // afford it, it goes back in the treat row, ready to buy.
 function weeklyPace() {
   const per = [1, 2, 3, 4].map(i => iso(weekStartDate(-i)))
@@ -1200,7 +1201,7 @@ function weeklyPace() {
 }
 function goalPlan(bal = balance()) {
   const pace = weeklyPace();
-  const top = lib.rewards.length > 1 ? lib.rewards.reduce((a, r) => r.points > a.points ? r : a) : null;
+  const top = lib.rewards.length ? lib.rewards.reduce((a, r) => r.points > a.points ? r : a) : null;
   return { ...pace, goal: top && top.points > bal ? top : null, hidden: new Set() };
 }
 const goalPct = (g, bal) => Math.max(0, Math.min(100, Math.floor(bal / g.points * 100)));

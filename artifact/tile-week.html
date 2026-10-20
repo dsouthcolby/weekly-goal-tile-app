@@ -61,6 +61,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 @media (max-width:339px){ .score{grid-template-columns:1fr} .treats{justify-content:flex-start} }
 .treats{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
 .treats-list{display:contents}
+/* The goal: one strip under the treats that fills as you earn */
+.goalbar{grid-column:1/-1;position:relative;margin-top:10px;height:28px;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;font-size:13px;color:var(--ink)}
+.goalbar i{position:absolute;inset:0 auto 0 0;background:color-mix(in srgb,var(--accent) 22%,var(--surface));transition:width .5s ease}
+.goalbar span{position:relative;display:flex;justify-content:space-between;align-items:center;gap:8px;height:100%;padding:0 10px}
+.goalbar b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goalbar em{flex:none;font-style:normal;color:var(--muted)}
+.goalbar.pop{animation:goalpop 1.4s ease}
+@keyframes goalpop{30%{box-shadow:0 0 0 3px #FFD84A,0 0 16px 5px rgba(255,200,40,.6)}}
 .treat.edit{background:transparent;border-style:dashed;color:var(--muted)}
 .treat{display:inline-flex;align-items:center;gap:7px;min-height:36px;max-width:100%;text-align:left;line-height:1.2;padding:5px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface2);color:var(--muted);font-weight:500;font-size:13.5px;transition:background .2s,color .2s,border-color .2s}
 .treat .tpr{font-variant-numeric:tabular-nums;font-weight:500;font-size:12px;opacity:.85}
@@ -344,6 +352,7 @@ html[data-look="y2k"] body{background:
   linear-gradient(180deg,#D3EBF6,#EEE2F2 55%,#FBDDEE) fixed}
 html[data-look="y2k"] .iconbtn,html[data-look="y2k"] .hicon,html[data-look="y2k"] .score,html[data-look="y2k"] .day,html[data-look="y2k"] .treat,html[data-look="y2k"] .tile,html[data-look="y2k"] .chip,html[data-look="y2k"] .chip .x,html[data-look="y2k"] .tile .pen,html[data-look="y2k"] .tray,html[data-look="y2k"] .btn,html[data-look="y2k"] .sheet,html[data-look="y2k"] input,html[data-look="y2k"] select,html[data-look="y2k"] .auth-card,html[data-look="y2k"] .rrow,html[data-look="y2k"] .hist .h,html[data-look="y2k"] .sw,html[data-look="y2k"] .toast,html[data-look="y2k"] .link.on{border-radius:0}
 html[data-look="y2k"] .score,html[data-look="y2k"] .day,html[data-look="y2k"] .auth-card{border:2px solid var(--edge);box-shadow:var(--shadow)}
+html[data-look="y2k"] .goalbar{border:2px solid var(--edge);border-radius:0}
 html[data-look="y2k"] .day.blank{border:2px dashed var(--line);box-shadow:none;background:rgba(255,252,253,.55)}
 html[data-look="y2k"] .day.today{border-color:var(--ink);box-shadow:4px 4px 0 var(--ink)}
 html[data-look="y2k"] .day.armed{border-style:dashed;border-color:var(--accent)}
@@ -450,6 +459,8 @@ html[data-look="classic"] .day .dh b,html[data-look="classic"] .day .dh .dn,html
 html[data-look="classic"] .day .dh b{font-size:12px;letter-spacing:0}
 html[data-look="classic"] .day .dh .dn{font-size:14px}
 html[data-look="classic"] .day .dsum{font-size:11px}
+html[data-look="classic"] .goalbar{border:0;border-radius:0;background:#fff;box-shadow:inset 1px 1px #808080,inset -1px -1px #fff,0 0 0 1px #c8c8c8}
+html[data-look="classic"] .goalbar i{background:#C9D9F4}
 html[data-look="classic"] .day.blank{background:rgba(255,255,255,.45);box-shadow:0 0 0 1px #c8c8c8}
 html[data-look="classic"] .day.blank .dh{background:#E6E6E6}
 html[data-look="classic"] .day.blank .dh b,html[data-look="classic"] .day.blank .dh .dn{color:#8a8a8a}
@@ -723,6 +734,7 @@ try { const l = JSON.parse(localStorage.getItem('tw2:lib')), k = (l && l.look) |
       <div class="treats"><span class="treats-list" id="rewards"></span><button class="treat edit" id="rwBtn" type="button" aria-label="Edit treat menu">Edit</button></div>
       <div class="nextline" id="nextline"></div>
     </div>
+    <div class="goalbar" id="goal" hidden><i id="goalFill"></i><span><b id="goalName"></b><em id="goalTo"></em></span></div>
   </section>
 
   <div class="dueline" id="dueline" hidden></div>
@@ -1133,7 +1145,17 @@ function renderScore(items) {
   note.hidden = !note.textContent;
   $('#meta').innerHTML = (note.hidden ? `<span><b>${earned} pts</b> earned this week</span>` : '')
     + (lib.limit ? `<span><b>${count}</b> of <b>${lib.limit}</b> tiles</span>` : '');
-  const rws = lib.rewards;
+  const plan = goalPlan(bal);
+  const rws = lib.rewards.filter(r => r !== plan.goal && !plan.hidden.has(r.id));
+  const g = plan.goal, gEl = $('#goal');
+  gEl.hidden = !g;
+  if (g) {
+    const pct = goalPct(g, bal);
+    $('#goalFill').style.width = pct + '%';
+    $('#goalName').textContent = g.name;
+    $('#goalTo').textContent = `${g.points - bal} to go`;
+    gEl.setAttribute('aria-label', `Goal: ${g.name}, ${pct}%, ${g.points - bal} pts to go`);
+  }
   // Each treat is a button: muted until you can afford it, filled when it's ready to buy.
   // Only rebuilt when something changed, so a sparkle already playing isn't cut off by the next render.
   const treatsHtml = rws.map(r => { const ok = bal >= r.points; return `<button class="treat${ok ? ' ready' : ''}" type="button" data-buy="${esc(r.id)}" aria-label="${ok ? `Buy ${esc(r.name)} for ${r.points} points` : `${esc(r.name)}, ${r.points} points, ${r.points - bal} more needed`}"><span>${esc(r.name)}</span><span class="tpr">${r.points}</span></button>`; }).join('');
@@ -1155,9 +1177,23 @@ function renderScore(items) {
     sparkle(el, 7, 2);
   }
   readyBefore = ready;
-  $('#nextline').innerHTML = rws.length ? '' : 'No treats on the menu yet. Tap <b>Edit</b> to add some.';
-  $('#nextline').hidden = !!rws.length;
+  $('#nextline').innerHTML = lib.rewards.length ? '' : 'No treats on the menu yet. Tap <b>Edit</b> to add some.';
+  $('#nextline').hidden = !!lib.rewards.length;
 }
+// Big treats become a goal: anything costing more than about two weeks of your usual points.
+// The closest one you can't afford yet is the goal; other big ones wait off the board until then.
+function weeklyPace() {
+  const per = [1, 2, 3, 4].map(i => iso(weekStartDate(-i)))
+    .map(w => total(Object.values(P).filter(p => !p.deleted && p.kind === 'tile' && p.week === w)));
+  const used = per.filter(x => x > 0);
+  return { avg: used.length ? used.reduce((a, b) => a + b, 0) / used.length : 0, weeks: used.length };
+}
+function goalPlan(bal = balance()) {
+  const pace = weeklyPace();
+  const big = pace.avg ? lib.rewards.filter(r => r.points > 2 * pace.avg && r.points > bal).sort((a, b) => a.points - b.points) : [];
+  return { ...pace, goal: big[0] || null, hidden: new Set(big.slice(1).map(r => r.id)) };
+}
+const goalPct = (g, bal) => Math.max(0, Math.min(100, Math.floor(bal / g.points * 100)));
 function buy(id) {
   const r = lib.rewards.find(x => x.id === id); if (!r) return;
   const bal = balance();
@@ -1176,7 +1212,9 @@ function confirmBuy(id) {
   if (bal < r.points) { toast(`${r.points - bal} more pts for ${r.name}`); return; }
   buyingId = id;
   $('#buyTitle').textContent = `Buy ${r.name}?`;
-  $('#buyText').textContent = `It costs ${r.points} pts. You’ll have ${bal - r.points} pts left.`;
+  const g = goalPlan(bal).goal, a = g ? goalPct(g, bal) : 0, b = g ? goalPct(g, bal - r.points) : 0;
+  $('#buyText').textContent = `It costs ${r.points} pts. You’ll have ${bal - r.points} pts left.`
+    + (g && g.id !== r.id && a - b >= 10 ? ` Sets ${g.name} back from ${a}% to ${b}%.` : '');
   $('#buyOk').textContent = `Buy for ${r.points} pts`;
   $('#buyDlg').showModal();
 }
@@ -1379,6 +1417,7 @@ function addItem(tileId, day) {
   const t = lib.tiles.find(x => x.id === tileId); if (!t) return;
   if (weekFull()) { toast(`Weekly limit reached (${lib.limit} tiles)`); return; }
   const before = balance();
+  const plan = goalPlan(before), g = plan.goal;
   const dayBefore = total(weekItems(curStart).filter(x => x.day === Number(day)));
   const now = Date.now();
   const pts = pointsOn(t, iso(addDays(fromIso(curStart), Number(day))));
@@ -1390,10 +1429,18 @@ function addItem(tileId, day) {
   const after = before + item.points;
   const dayAfter = dayBefore + item.points, dayName = DAYS_FULL[addDays(fromIso(curStart), Number(day)).getDay()];
   const unlocked = lib.rewards.filter(r => before < r.points && after >= r.points);
-  toast(pts < t.points ? `${t.name}, late: ${pts} of ${t.points} pts`
-    : unlocked.length ? `You can now afford ${unlocked.map(r => r.name).join(', ')}`
+  // Toward the goal: a milestone at a quarter, half and three quarters, otherwise how far this moved it.
+  const pa = g ? goalPct(g, before) : 0, pb = g ? goalPct(g, after) : 0;
+  const mile = g && [75, 50, 25].find(m => pa < m && pb >= m);
+  const MILES = { 25: 'A quarter of the way to', 50: 'Halfway to', 75: 'Three quarters of the way to' };
+  if (mile) { const el = $('#goal'); el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); sparkle(el, 7, 2); }
+  const wks = g && plan.weeks >= 2 ? Math.max(1, Math.ceil((g.points - after) / plan.avg)) : 0;
+  toast(unlocked.length ? `You can now afford ${unlocked.map(r => r.name).join(', ')}` + (mile ? ` · ${MILES[mile]} ${g.name}!` : '')
+    : mile ? `${MILES[mile]} ${g.name}!`
+    : pts < t.points ? `${t.name}, late: ${pts} of ${t.points} pts`
     : lib.dayMax > 0 && dayAfter > lib.dayMax ? `${dayName} is over your daily max: ${dayAfter} / ${lib.dayMax} pts`
     : lib.dayTarget > 0 && dayBefore < lib.dayTarget && dayAfter >= lib.dayTarget ? `Daily target reached on ${dayName}`
+    : g && after > before ? `+${item.points} · ${g.name} ${pb}%` + (wks ? ` · about ${wks} week${wks === 1 ? '' : 's'}` : '')
     : `+${item.points} · ${t.name} on ${dayName}`);
 }
 function removeItem(id) {

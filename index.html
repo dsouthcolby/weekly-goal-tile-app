@@ -1110,9 +1110,10 @@ function tileDue(t) {
   if (!every) return null;
   if (resting()) return { state: 'rest', label: 'Paused', text: 'paused while resting' };
   const dates = doneDates(t.id), today = iso(new Date());
-  if (!dates.length) return { state: 'due', label: 'Due', text: 'not done yet', worth: t.points };
-  const since = countedDays(t.id, dates[dates.length - 1], today);
   const delayed = Object.values(P).some(p => !p.deleted && isDelay(p) && p.tileId === t.id && iso(addDays(fromIso(p.week), p.day)) === today);
+  // Never done: due until it is, except on a day it was delayed.
+  if (!dates.length) return delayed ? { state: 'ok', next: 1 } : { state: 'due', label: 'Due', text: 'not done yet', worth: t.points, fresh: true };
+  const since = countedDays(t.id, dates[dates.length - 1], today);
   if (since < every) return { state: 'ok', next: every - since };
   if (since === every) return { state: 'due', label: 'Due', text: 'due today', worth: t.points, delayed };
   const late = since - every;
@@ -1367,7 +1368,7 @@ function renderDue() {
   const left = freeDelaysLeft();
   el.innerHTML = list.length ? `<span class="dl-lab">Due</span>` + list.map(({ t, d }) => `<div class="dl-row">`
     + `<button type="button" class="dl-item ${d.state}" data-due="${esc(t.id)}" aria-label="${esc(t.name)}, ${d.text}. Tap to place it."><span class="dl-name">${esc(t.name)}</span><span class="dl-when">${esc(when(t, d))}</span></button>`
-    + (d.delayed ? `<span class="dl-note">Delayed</span>` : d.text === 'not done yet' ? '' : `<button type="button" class="link dl-delay" data-delay="${esc(t.id)}">Delay</button>`)
+    + (d.delayed ? `<span class="dl-note">Delayed</span>` : `<button type="button" class="link dl-delay" data-delay="${esc(t.id)}">Delay</button>`)
     + `</div>`).join('')
     + `<div class="dl-foot"><span>${left ? `${left} free delay left` : 'Free delay used'}</span><button type="button" class="link" data-rest="on">Rest mode</button></div>` : '';
 }
@@ -1850,7 +1851,8 @@ function confirmDelay(id) {
   const fee = delayFee(t), bal = balance();
   delayingId = id;
   $('#delayTitle').textContent = `Delay ${t.name}?`;
-  $('#delayText').textContent = 'Pauses it for today: no later, no more points lost. '
+  const fresh = (tileDue(t) || {}).fresh;
+  $('#delayText').textContent = (fresh ? 'Takes it off Due until tomorrow. ' : 'Pauses it for today: no later, no more points lost. ')
     + (fee === 0 ? 'Free (1 a week).' : bal >= fee ? `Costs ${fee} pts. Sick? Rest mode is free.` : `Costs ${fee} pts; you have ${Math.max(0, bal)}. Sick? Rest mode is free.`);
   $('#delayOk').textContent = fee === 0 ? 'Delay free' : `Delay · ${fee} pts`;
   $('#delayOk').disabled = fee > bal;

@@ -1213,7 +1213,7 @@ function renderScore(items) {
   $('#nextline').hidden = !!lib.rewards.length;
 }
 // Big treats become a goal: anything costing more than a week of your usual points.
-// The closest one you can't afford yet is the goal; other big ones wait off the board until then.
+// The largest one you can't afford yet is the goal; smaller ones stay in the treat row.
 function weeklyPace() {
   const per = [1, 2, 3, 4].map(i => iso(weekStartDate(-i)))
     .map(w => total(Object.values(P).filter(p => !p.deleted && p.kind === 'tile' && p.week === w)));
@@ -1222,8 +1222,8 @@ function weeklyPace() {
 }
 function goalPlan(bal = balance()) {
   const pace = weeklyPace();
-  const big = pace.avg ? lib.rewards.filter(r => r.points > pace.avg && r.points > bal).sort((a, b) => a.points - b.points) : [];
-  return { ...pace, goal: big[0] || null, hidden: new Set(big.slice(1).map(r => r.id)) };
+  const big = pace.avg ? lib.rewards.filter(r => r.points > pace.avg && r.points > bal).sort((a, b) => b.points - a.points) : [];
+  return { ...pace, goal: big[0] || null, hidden: new Set() };
 }
 const goalPct = (g, bal) => Math.max(0, Math.min(100, Math.floor(bal / g.points * 100)));
 function buy(id) {

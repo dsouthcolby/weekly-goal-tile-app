@@ -1212,8 +1212,8 @@ function renderScore(items) {
   $('#nextline').innerHTML = lib.rewards.length ? '' : 'No treats on the menu yet. Tap <b>Edit</b> to add some.';
   $('#nextline').hidden = !!lib.rewards.length;
 }
-// Big treats become a goal: anything costing more than a week of your usual points.
-// The largest one you can't afford yet is the goal; smaller ones stay in the treat row.
+// The goal is your most expensive treat, shown as a strip that fills as you earn. Once you can
+// afford it, it goes back in the treat row, ready to buy.
 function weeklyPace() {
   const per = [1, 2, 3, 4].map(i => iso(weekStartDate(-i)))
     .map(w => total(Object.values(P).filter(p => !p.deleted && p.kind === 'tile' && p.week === w)));
@@ -1222,8 +1222,8 @@ function weeklyPace() {
 }
 function goalPlan(bal = balance()) {
   const pace = weeklyPace();
-  const big = pace.avg ? lib.rewards.filter(r => r.points > pace.avg && r.points > bal).sort((a, b) => b.points - a.points) : [];
-  return { ...pace, goal: big[0] || null, hidden: new Set() };
+  const top = lib.rewards.length > 1 ? lib.rewards.reduce((a, r) => r.points > a.points ? r : a) : null;
+  return { ...pace, goal: top && top.points > bal ? top : null, hidden: new Set() };
 }
 const goalPct = (g, bal) => Math.max(0, Math.min(100, Math.floor(bal / g.points * 100)));
 function buy(id) {

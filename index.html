@@ -271,23 +271,24 @@ html{overflow-x:hidden;overflow-x:clip}
 #setForm .look-opt{padding:5px 4px;gap:4px;font-size:11px;line-height:1.2}
 #setForm .look-opt i{height:18px}
 /* "Due" line above the days, and due badges on tray tiles */
-.dueline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px;padding:8px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-size:13px}
-.dueline .dl-lab{font-weight:700;color:var(--ink);margin-right:2px}
-.dl-item{display:inline-flex;align-items:baseline;gap:6px;border:1px solid transparent;border-radius:999px;padding:3px 10px;font:inherit;font-size:12.5px;cursor:pointer}
-/* One row per due tile: tap the pill to place it, or delay it a day */
-.dl-row{display:flex;align-items:center;gap:8px;width:100%}
-.dl-row .dl-item{flex:0 1 auto;min-width:0;flex-wrap:wrap;text-align:left}
-.dl-delay,.dl-note{margin-left:auto;flex:none;font-size:12.5px}
-.dl-note{color:var(--muted)}
-.dl-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;width:100%;padding-top:6px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
-.dl-rest{display:grid;gap:6px;width:100%}
-.dl-rest b{font-family:var(--display);font-size:16px}
-.dl-rest .btn{justify-self:start}
 .restchip{justify-self:start;font-size:11px;font-weight:700;line-height:1;padding:3px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
 .tile .tp s{font-size:.6em;font-weight:500;opacity:.65;margin-right:3px}
-.dl-item .dl-name{font-weight:700}
-.dl-item.due{background:#FFE7A8;border-color:#D9A21B;color:#4A3500}
-.dl-item.late{background:#C0322B;border-color:#8E1F1A;color:#fff}
+/* Due list: one compact row per due tile, with the same small badge the tiles use */
+.dueline{display:flex;flex-direction:column;gap:2px;margin-top:12px;padding:8px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-size:13px}
+.dueline .dl-lab{font-weight:700;color:var(--ink);font-size:12px}
+.dl-row{display:flex;align-items:center;gap:8px;min-height:28px}
+.dl-item{flex:1;min-width:0;display:flex;align-items:center;gap:6px;border:0;background:none;padding:2px 0;color:var(--ink);font:inherit;font-size:13px;text-align:left;cursor:pointer}
+.dl-item .dl-name{min-width:0;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dl-item .dl-when{flex:none;color:var(--muted);font-size:12px}
+.dl-tag{flex:none;font-size:10.5px;font-weight:700;line-height:1;padding:3px 5px;border-radius:5px}
+.dl-tag.due{background:#FFE7A8;color:#4A3500;box-shadow:inset 0 0 0 1px #D9A21B}
+.dl-tag.late{background:#C0322B;color:#fff}
+.dl-delay,.dl-note{flex:none;font-size:12.5px}
+.dl-note{color:var(--muted)}
+.dl-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;margin-top:4px;padding-top:6px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.dl-rest{display:grid;gap:6px}
+.dl-rest b{font-family:var(--display);font-size:16px}
+.dl-rest .btn{justify-self:start}
 .tile .due{position:absolute;top:5px;right:5px;font-size:10.5px;font-weight:700;line-height:1;padding:3px 5px;border-radius:5px;pointer-events:none}
 .tile .due.due{background:#FFE7A8;color:#4A3500;box-shadow:inset 0 0 0 1px #D9A21B}
 .tile .due.late{background:#C0322B;color:#fff}
@@ -371,6 +372,8 @@ html[data-look="y2k"] body{background:
   linear-gradient(180deg,#D3EBF6,#EEE2F2 55%,#FBDDEE) fixed}
 html[data-look="y2k"] .iconbtn,html[data-look="y2k"] .hicon,html[data-look="y2k"] .score,html[data-look="y2k"] .day,html[data-look="y2k"] .treat,html[data-look="y2k"] .tile,html[data-look="y2k"] .chip,html[data-look="y2k"] .chip .x,html[data-look="y2k"] .tile .pen,html[data-look="y2k"] .tray,html[data-look="y2k"] .btn,html[data-look="y2k"] .sheet,html[data-look="y2k"] input,html[data-look="y2k"] select,html[data-look="y2k"] .auth-card,html[data-look="y2k"] .rrow,html[data-look="y2k"] .hist .h,html[data-look="y2k"] .sw,html[data-look="y2k"] .toast,html[data-look="y2k"] .link.on{border-radius:0}
 html[data-look="y2k"] .score,html[data-look="y2k"] .day,html[data-look="y2k"] .auth-card{border:2px solid var(--edge);box-shadow:var(--shadow)}
+html[data-look="y2k"] .dueline{border:2px solid var(--edge);border-radius:0;box-shadow:var(--shadow)}
+html[data-look="y2k"] .dl-tag{border-radius:0}
 html[data-look="y2k"] .goalbar{border:2px solid var(--edge);border-radius:0}
 html[data-look="y2k"] .day.blank{border:2px dashed var(--line);box-shadow:none;background:rgba(255,252,253,.55)}
 html[data-look="y2k"] .day.today{border-color:var(--ink);box-shadow:4px 4px 0 var(--ink)}
@@ -478,6 +481,10 @@ html[data-look="classic"] .day .dh b,html[data-look="classic"] .day .dh .dn,html
 html[data-look="classic"] .day .dh b{font-size:12px;letter-spacing:0}
 html[data-look="classic"] .day .dh .dn{font-size:14px}
 html[data-look="classic"] .day .dsum{font-size:11px}
+html[data-look="classic"] .dueline{border:0;border-radius:0;background:#EDEDED;box-shadow:inset -1px -1px #9a9a9a,inset 1px 1px #fff,0 0 0 1px #c8c8c8;padding:2px 2px 6px}
+html[data-look="classic"] .dueline .dl-lab{margin-bottom:2px;padding:1px 5px;background:linear-gradient(90deg,#B9D5F2,#E2EEF9);color:#000080;font-size:13px}
+html[data-look="classic"] .dl-row,html[data-look="classic"] .dl-foot,html[data-look="classic"] .dl-rest{margin-inline:8px}
+html[data-look="classic"] .dl-tag{border-radius:0}
 html[data-look="classic"] .goalbar{border:0;border-radius:0;background:#fff;box-shadow:inset 1px 1px #808080,inset -1px -1px #fff,0 0 0 1px #c8c8c8}
 html[data-look="classic"] .goalbar i{background:#C9D9F4}
 html[data-look="classic"] .day.blank{background:rgba(255,255,255,.45);box-shadow:0 0 0 1px #c8c8c8}
@@ -617,6 +624,9 @@ html:not([data-look="y2k"]):not([data-look="cobalt"]):not([data-look="plain"]):n
 html:not([data-look="y2k"]):not([data-look="cobalt"]):not([data-look="plain"]):not([data-look="classic"]) .day.over .dsum{color:#FFD0C8}
 html:not([data-look="y2k"]):not([data-look="cobalt"]):not([data-look="plain"]):not([data-look="classic"]) .day.today .dh b{color:#fff}
 /* A day with nothing on it looks like an inactive window */
+html:not([data-look="y2k"]):not([data-look="cobalt"]):not([data-look="plain"]):not([data-look="classic"]) .dueline{border:0;border-radius:8px 8px 0 0;background:var(--bg);box-shadow:0 0 0 1px #0831d9;padding:0 0 6px;overflow:hidden}
+html:not([data-look="y2k"]):not([data-look="cobalt"]):not([data-look="plain"]):not([data-look="classic"]) .dueline .dl-lab{margin-bottom:2px;padding:4px 9px;background:#0058E6;color:#fff;font-family:var(--title);font-size:14px;box-shadow:inset 0 1px #3D8BF5}
+html:not([data-look="y2k"]):not([data-look="cobalt"]):not([data-look="plain"]):not([data-look="classic"]) .dl-row,html:not([data-look="y2k"]):not([data-look="cobalt"]):not([data-look="plain"]):not([data-look="classic"]) .dl-foot,html:not([data-look="y2k"]):not([data-look="cobalt"]):not([data-look="plain"]):not([data-look="classic"]) .dl-rest{margin-inline:9px}
 html:not([data-look="y2k"]):not([data-look="cobalt"]):not([data-look="plain"]):not([data-look="classic"]) .day.blank{background:rgba(236,233,216,.6);box-shadow:0 0 0 1px #8AA5E6}
 html:not([data-look="y2k"]):not([data-look="cobalt"]):not([data-look="plain"]):not([data-look="classic"]) .day.blank .dh{background:#8AA8EB;text-shadow:none}
 html:not([data-look="y2k"]):not([data-look="cobalt"]):not([data-look="plain"]):not([data-look="classic"]) .day.blank .dh b,html:not([data-look="y2k"]):not([data-look="cobalt"]):not([data-look="plain"]):not([data-look="classic"]) .day.blank .dh .dn{color:#E8EEFB}
@@ -1202,7 +1212,7 @@ function renderScore(items) {
   $('#nextline').innerHTML = lib.rewards.length ? '' : 'No treats on the menu yet. Tap <b>Edit</b> to add some.';
   $('#nextline').hidden = !!lib.rewards.length;
 }
-// Big treats become a goal: anything costing more than about two weeks of your usual points.
+// Big treats become a goal: anything costing more than a week of your usual points.
 // The closest one you can't afford yet is the goal; other big ones wait off the board until then.
 function weeklyPace() {
   const per = [1, 2, 3, 4].map(i => iso(weekStartDate(-i)))
@@ -1212,7 +1222,7 @@ function weeklyPace() {
 }
 function goalPlan(bal = balance()) {
   const pace = weeklyPace();
-  const big = pace.avg ? lib.rewards.filter(r => r.points > 2 * pace.avg && r.points > bal).sort((a, b) => a.points - b.points) : [];
+  const big = pace.avg ? lib.rewards.filter(r => r.points > pace.avg && r.points > bal).sort((a, b) => a.points - b.points) : [];
   return { ...pace, goal: big[0] || null, hidden: new Set(big.slice(1).map(r => r.id)) };
 }
 const goalPct = (g, bal) => Math.max(0, Math.min(100, Math.floor(bal / g.points * 100)));
@@ -1396,16 +1406,17 @@ function renderDue() {
     const ago = isoDay(today) - isoDay(from);
     const since = ago === 0 ? 'today' : ago === 1 ? 'yesterday' : ago < 7 ? DAYS_FULL[fromIso(from).getDay()] : fmt(fromIso(from));
     el.hidden = offset !== 0;
-    el.innerHTML = `<div class="dl-rest"><b>Resting since ${since}</b><span class="help">Nothing goes late. Tiles earn full points.</span><button type="button" class="btn primary" data-rest="off">I'm better</button></div>`;
+    el.innerHTML = `<span class="dl-lab">Rest mode</span><div class="dl-rest"><b>Resting since ${since}</b><span class="help">Nothing goes late. Tiles earn full points.</span><button type="button" class="btn primary" data-rest="off">I'm better</button></div>`;
     return;
   }
   const list = lib.tiles.map(t => ({ t, d: tileDue(t) })).filter(x => x.d && x.d.state !== 'ok')
     .sort((a, b) => (b.d.state === 'late') - (a.d.state === 'late') || a.t.name.localeCompare(b.t.name));
   el.hidden = !list.length || offset !== 0;
-  const when = (t, d) => d.state === 'late' ? `${d.late}d late · ${d.worth} of ${t.points} pts` : `${d.text === 'due today' ? 'today' : d.text} · ${d.worth} pts`;
+  // The badge says due or how late; the row adds what it's worth now.
+  const when = (t, d) => d.state === 'late' ? `${d.worth} of ${t.points} pts` : `${d.worth} pts`;
   const left = freeDelaysLeft();
   el.innerHTML = list.length ? `<span class="dl-lab">Due</span>` + list.map(({ t, d }) => `<div class="dl-row">`
-    + `<button type="button" class="dl-item ${d.state}" data-due="${esc(t.id)}" aria-label="${esc(t.name)}, ${d.text}. Tap to place it."><span class="dl-name">${esc(t.name)}</span><span class="dl-when">${esc(when(t, d))}</span></button>`
+    + `<button type="button" class="dl-item ${d.state}" data-due="${esc(t.id)}" aria-label="${esc(t.name)}, ${d.text}. Tap to place it."><span class="dl-tag ${d.state}">${esc(d.label)}</span><span class="dl-name">${esc(t.name)}</span><span class="dl-when">${esc(when(t, d))}</span></button>`
     + (d.delayed ? `<span class="dl-note">Delayed</span>` : `<button type="button" class="link dl-delay" data-delay="${esc(t.id)}">Delay</button>`)
     + `</div>`).join('')
     + `<div class="dl-foot"><span>${left ? `${left} free delay left` : 'Free delay used'}</span><button type="button" class="link" data-rest="on">Rest mode</button></div>` : '';

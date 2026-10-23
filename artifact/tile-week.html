@@ -1164,7 +1164,7 @@ function renderScore(items) {
     const pct = goalPct(g, bal);
     $('#goalFill').style.width = pct + '%';
     $('#goalName').textContent = g.name;
-    $('#goalTo').textContent = `${g.points - bal} to go`;
+    $('#goalTo').textContent = `${g.points - bal} to go!`;
     gEl.setAttribute('aria-label', `Goal: ${g.name}, ${pct}%, ${g.points - bal} pts to go`);
   }
   // Each treat is a button: muted until you can afford it, filled when it's ready to buy.

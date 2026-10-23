@@ -1097,12 +1097,17 @@ function countedDays(tileId, from, to) {
   }
   return n;
 }
+// A tile that has never been done counts from the day its target started: the day the tile was
+// made, or the day it was given a target. Tiles from before that date was kept count from this release.
+const TARGET_START_FALLBACK = '2026-10-23';
+const targetStart = t => typeof t.since === 'string' && /^\d{4}-\d\d-\d\d$/.test(t.since) ? t.since : TARGET_START_FALLBACK;
 // What a tile earns if done on a given day: full points unless it was late by then (rest days earn in full).
+// A tile never done before gets one full period from its start before it counts as late.
 function pointsOn(t, date) {
   const every = t.every | 0;
   if (!every || restOn(date)) return t.points;
   const before = doneDates(t.id).filter(d => d < date);
-  if (!before.length) return t.points;
+  if (!before.length) return latePoints(t.points, countedDays(t.id, targetStart(t), date) - every);
   return latePoints(t.points, countedDays(t.id, before[before.length - 1], date) - every);
 }
 // A tile with "every N days" is due when N counted days have passed since it was last done, overdue after that.
@@ -1112,8 +1117,13 @@ function tileDue(t) {
   if (resting()) return { state: 'rest', label: 'Paused', text: 'paused while resting' };
   const dates = doneDates(t.id), today = iso(new Date());
   const delayed = Object.values(P).some(p => !p.deleted && isDelay(p) && p.tileId === t.id && iso(addDays(fromIso(p.week), p.day)) === today);
-  // Never done: due until it is, except on a day it was delayed.
-  if (!dates.length) return delayed ? { state: 'ok', next: 1 } : { state: 'due', label: 'Due', text: 'not done yet', worth: t.points, fresh: true };
+  // Never done: due from its start, and late once a full period has passed without it.
+  if (!dates.length) {
+    const n = countedDays(t.id, targetStart(t), today);
+    if (n <= every) return delayed ? { state: 'ok', next: 1 } : { state: 'due', label: 'Due', text: 'not done yet', worth: t.points, fresh: true };
+    const late = n - every;
+    return { state: 'late', late, label: `${late}d late`, text: `${late} day${late === 1 ? '' : 's'} overdue`, worth: latePoints(t.points, late), delayed };
+  }
   const since = countedDays(t.id, dates[dates.length - 1], today);
   if (since < every) return { state: 'ok', next: every - since };
   if (since === every) return { state: 'due', label: 'Due', text: 'due today', worth: t.points, delayed };
@@ -1960,10 +1970,11 @@ $('#tileForm').addEventListener('submit', e => {
     const placed = Object.values(P).filter(p => p.week === start && !p.deleted && p.kind === 'tile' && p.tileId === editingTile).length;
     const after = balance() + placed * (points - old.points);
     if (after < 0) { showTileErr(`That would leave you with ${after} pts, because this week’s ${old.name} tiles would be worth less and you’ve already spent those points. The lowest you can set it to now is ${Math.max(1, points - Math.floor(after / placed))}.`); return; }
-    const t = { ...old, name, points, color: tileColor, every };
+    // Giving a tile a target for the first time starts its count today.
+    const t = { ...old, name, points, color: tileColor, every, ...(every && !old.every ? { since: iso(new Date()) } : {}) };
     lib.tiles = lib.tiles.map(x => x.id === editingTile ? t : x);
     applyTileToThisWeek(t);
-  } else lib.tiles = [...lib.tiles, { id: rid(), name, points, color: tileColor, every }];
+  } else lib.tiles = [...lib.tiles, { id: rid(), name, points, color: tileColor, every, since: iso(new Date()) }];
   $('#tileDlg').close(); saveLib();
   toast(editingTile ? 'Tile updated' : 'Tile added');
 });

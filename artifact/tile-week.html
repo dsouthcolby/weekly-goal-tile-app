@@ -389,8 +389,8 @@ html[data-look="y2k"] .goalbar,html[data-look="y2k"] .btn,html[data-look="y2k"] 
 html[data-look="y2k"] .bubbles{display:block;position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
 .bub{position:absolute;top:calc(var(--y) * 1%);width:var(--s);height:var(--s);opacity:var(--o)}
 .bub i{position:absolute;inset:0}
-.bub b{position:absolute;inset:0;border-radius:50%;filter:blur(var(--bl));background:radial-gradient(circle at 30% 27%,rgba(255,255,255,.95) 0 7%,rgba(255,255,255,0) 15%),radial-gradient(circle,rgba(255,255,255,.10) 0 58%,rgba(255,255,255,.5) 70%,rgba(255,255,255,0) 73%)}
-.bub b::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 210deg,#ff8fcf,#8fdcff,#b48fff,#8fffc4,#ffe98f,#ff8fcf);-webkit-mask:radial-gradient(circle,transparent 60%,#000 67%,#000 71%,transparent 74%);mask:radial-gradient(circle,transparent 60%,#000 67%,#000 71%,transparent 74%);opacity:.85}
+.bub b{position:absolute;inset:0;border-radius:50%;filter:blur(var(--bl));background:radial-gradient(circle at 30% 27%,rgba(255,255,255,.95) 0 7%,rgba(255,255,255,0) 15%),radial-gradient(circle,rgba(255,255,255,.08) 0 64%,rgba(255,255,255,.45) 70%,rgba(255,255,255,0) 72%)}
+.bub b::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 210deg,#ff8fcf,#8fdcff,#b48fff,#8fffc4,#ffe98f,#ff8fcf);-webkit-mask:radial-gradient(circle,transparent 66.5%,#000 69%,#000 70.5%,transparent 72%);mask:radial-gradient(circle,transparent 66.5%,#000 69%,#000 70.5%,transparent 72%);opacity:.9}
 .bub b::after{content:'';position:absolute;left:58%;top:62%;width:14%;height:8%;border-radius:50%;background:rgba(255,255,255,.7);transform:rotate(-35deg)}
 .bub b{transition:opacity 2.5s ease}
 .bub.popped b{animation:bub-pop .35s ease-out forwards!important}
@@ -1375,8 +1375,8 @@ let lookShown = null;
   let x = 7; const r = () => (x = (x * 9301 + 49297) % 233280) / 233280;
   const layer = document.createElement('div'); layer.className = 'bubbles'; layer.setAttribute('aria-hidden', 'true');
   for (let i = 0; i < 46; i++) {
-    const b = document.createElement('span'), size = Math.round(i % 3 === 0 ? 70 + r() * 60 : 18 + r() * 40);
-    const near = Math.min(1, (size - 18) / 100);   // 0 = small and far back, 1 = big and up front
+    const b = document.createElement('span'), size = Math.round(i % 3 === 0 ? 110 + r() * 80 : 32 + r() * 60);
+    const near = Math.min(1, (size - 32) / 150);   // 0 = small and far back, 1 = big and up front
     b.className = 'bub';
     b.innerHTML = '<i><b></b></i>';
     b.style.cssText = `left:${Math.round(r() * 104 - 4)}%;--s:${size}px;--y:${Math.round(r() * 100)}`

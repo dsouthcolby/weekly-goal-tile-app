@@ -406,14 +406,27 @@ html[data-look="y2k"] .iconbtn,html[data-look="y2k"] .hicon{border-radius:50%}
 html[data-look="y2k"] .goalbar,html[data-look="y2k"] .btn,html[data-look="y2k"] input,html[data-look="y2k"] select,html[data-look="y2k"] .hist .h,html[data-look="y2k"] .toast{border-radius:10px}
 .bubbles{display:none}
 html[data-look="y2k"] .bubbles{display:block;position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
-.bub{position:absolute;top:calc(var(--y) * 1%);border-radius:50%;background:radial-gradient(circle at 30% 27%,rgba(255,255,255,.95) 0 7%,rgba(255,255,255,0) 15%),radial-gradient(circle,rgba(255,255,255,.10) 0 58%,rgba(255,255,255,.5) 70%,rgba(255,255,255,0) 73%)}
-.bub::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 210deg,#ff8fcf,#8fdcff,#b48fff,#8fffc4,#ffe98f,#ff8fcf);-webkit-mask:radial-gradient(circle,transparent 60%,#000 67%,#000 71%,transparent 74%);mask:radial-gradient(circle,transparent 60%,#000 67%,#000 71%,transparent 74%);opacity:.85}
-.bub::after{content:'';position:absolute;left:58%;top:62%;width:14%;height:8%;border-radius:50%;background:rgba(255,255,255,.7);transform:rotate(-35deg)}
-/* Float slowly upwards, unless the phone asks for less motion (then they stay where they are). */
+.bub{position:absolute;top:calc(var(--y) * 1%);width:var(--s);height:var(--s);opacity:var(--o)}
+.bub i{position:absolute;inset:0}
+.bub b{position:absolute;inset:0;border-radius:50%;filter:blur(var(--bl));background:radial-gradient(circle at 30% 27%,rgba(255,255,255,.95) 0 7%,rgba(255,255,255,0) 15%),radial-gradient(circle,rgba(255,255,255,.10) 0 58%,rgba(255,255,255,.5) 70%,rgba(255,255,255,0) 73%)}
+.bub b::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 210deg,#ff8fcf,#8fdcff,#b48fff,#8fffc4,#ffe98f,#ff8fcf);-webkit-mask:radial-gradient(circle,transparent 60%,#000 67%,#000 71%,transparent 74%);mask:radial-gradient(circle,transparent 60%,#000 67%,#000 71%,transparent 74%);opacity:.85}
+.bub b::after{content:'';position:absolute;left:58%;top:62%;width:14%;height:8%;border-radius:50%;background:rgba(255,255,255,.7);transform:rotate(-35deg)}
+.bub b{transition:opacity 2.5s ease}
+.bub.popped b{animation:bub-pop .35s ease-out forwards!important}
+.bub.gone b{opacity:0;transition:none}
+@keyframes bub-pop{to{transform:scale(1.35);opacity:0}}
+/* Float slowly up on their own wandering paths, wobbling, the colours turning; small ones sit further back.
+   With reduced motion they stay put. */
 @media (prefers-reduced-motion: no-preference){
   html[data-look="y2k"] .bub{top:100%;will-change:transform;animation:bub-rise var(--d) linear infinite;animation-delay:calc(var(--y) * var(--d) / -100)}
+  html[data-look="y2k"] .bub i{animation:bub-sway var(--sd) ease-in-out infinite alternate;animation-delay:calc(var(--sd) / -2)}
+  html[data-look="y2k"] .bub b{animation:bub-wob var(--wd) ease-in-out infinite}
+  html[data-look="y2k"] .bub b::before{animation:bub-spin var(--rd) linear infinite}
 }
-@keyframes bub-rise{0%{transform:translate(0,0)}50%{transform:translate(14px,-60vh)}100%{transform:translate(0,-125vh)}}
+@keyframes bub-rise{to{transform:translateY(-125vh)}}
+@keyframes bub-sway{from{transform:translateX(calc(var(--sx) * -1))}to{transform:translateX(var(--sx))}}
+@keyframes bub-wob{0%,100%{transform:scale(1,1)}25%{transform:scale(1.05,.95)}50%{transform:scale(.97,1.03)}75%{transform:scale(1.03,.97)}}
+@keyframes bub-spin{to{transform:rotate(360deg)}}
 
 /* ---------- Cobalt look: cobalt sky, white panels, soft Bauhaus tiles, italic serif headings ---------- */
 html[data-look="cobalt"]{
@@ -1385,12 +1398,26 @@ let lookShown = null;
   const layer = document.createElement('div'); layer.className = 'bubbles'; layer.setAttribute('aria-hidden', 'true');
   for (let i = 0; i < 46; i++) {
     const b = document.createElement('span'), size = Math.round(i % 3 === 0 ? 70 + r() * 60 : 18 + r() * 40);
+    const near = Math.min(1, (size - 18) / 100);   // 0 = small and far back, 1 = big and up front
     b.className = 'bub';
-    b.style.cssText = `left:${Math.round(r() * 104 - 4)}%;width:${size}px;height:${size}px;--y:${Math.round(r() * 100)};--d:${18 + (i % 5) * 4}s`;
+    b.innerHTML = '<i><b></b></i>';
+    b.style.cssText = `left:${Math.round(r() * 104 - 4)}%;--s:${size}px;--y:${Math.round(r() * 100)}`
+      + `;--d:${Math.round(90 - near * 45 + r() * 10)}s;--o:${(.5 + near * .45).toFixed(2)};--bl:${((1 - near) * .8).toFixed(1)}px`
+      + `;--sx:${Math.round(8 + r() * 26)}px;--sd:${(5 + r() * 7).toFixed(1)}s;--wd:${(4 + r() * 5).toFixed(1)}s;--rd:${Math.round(18 + r() * 30)}s`;
     layer.appendChild(b);
   }
   document.body.prepend(layer);
 })();
+// Earning points pops a few of the bubbles on screen; they drift back in a few seconds later.
+function popBubbles(n = 3) {
+  if (calm() || document.documentElement.dataset.look !== 'y2k') return;
+  const seen = [...document.querySelectorAll('.bubbles .bub:not(.popped):not(.gone)')].filter(b => { const r = b.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth; });
+  for (const b of seen.sort(() => Math.random() - .5).slice(0, n)) {
+    b.classList.add('popped'); sparkle(b, 6, 1);
+    setTimeout(() => { b.classList.replace('popped', 'gone'); }, 400);
+    setTimeout(() => { b.classList.remove('gone'); }, 4500);
+  }
+}
 function applyLook(k) {
   if (k === lookShown) return;
   lookShown = k;
@@ -1498,7 +1525,7 @@ function addItem(tileId, day) {
   P[item.id] = item; dirty.p[item.id] = 1;
   changed();
   const chip = document.querySelector(`[data-item="${item.id}"]`); if (chip) chip.classList.add('pop');
-  billCelebrate();
+  billCelebrate(); popBubbles();
   const after = before + item.points;
   const dayAfter = dayBefore + item.points, dayName = DAYS_FULL[addDays(fromIso(curStart), Number(day)).getDay()];
   const unlocked = lib.rewards.filter(r => before < r.points && after >= r.points);

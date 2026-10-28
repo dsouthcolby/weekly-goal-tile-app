@@ -354,13 +354,13 @@ html{overflow-x:hidden;overflow-x:clip}
 /* ---------- Y2K look: muted pastels, pixel fonts, square corners, pixel outlines, hard shadows ---------- */
 html[data-look="y2k"]{
   color-scheme:light;
-  /* Y2K bubbles: soft aqua and pink, cyan-blue accent, rose treats. */
+  /* Y2K bubbles: soft aqua and orchid, cyan-blue accent, orchid treats. */
   --bg:#E6E6F5; --surface:#FBFEFF; --surface2:#F5F2FA; --ink:#1F3A57; --muted:#5A5A85; --line:#D9CFE8;
   --accent:#1A7AB8; --accent-ink:#FFFFFF; --accent-soft:#D6ECF7; --good:#3F7A55; --good-soft:#D8EDDF; --danger:#B23A45;
   --edge:#7E7AAE; /* pixel outlines and hard shadows */
-  /* Tiles alternate soft aqua and pink. */
-  --bill:#F9D5E7; --bill-deep:#EFA3C8; --bill-oval:#FFF4FA; --bill-line:#A04B78; --coin:#F0C75E; --coin-edge:#A67C1B;
-  --c0:#D3ECF4; --c1:#F8D7E8; --c2:#CFE0F2; --c3:#F3CDE0; --c4:#CFEAEC; --c5:#FAE6EF; --cink:#1F3A57;
+  /* Tiles alternate soft aqua and orchid. */
+  --bill:#EED5EE; --bill-deep:#D9A6D8; --bill-oval:#FBF3FB; --bill-line:#8A4D8A; --coin:#F0C75E; --coin-edge:#A67C1B;
+  --c0:#D3ECF4; --c1:#EED5EE; --c2:#CFE0F2; --c3:#E6C9E8; --c4:#CFEAEC; --c5:#F5E7F6; --cink:#1F3A57;
   --shadow:4px 4px 0 var(--edge); --tray-h:230px;
   --arcade:"Press Start 2P", ui-monospace, monospace;
   --display:"Pixelify Sans", ui-monospace, monospace;
@@ -381,7 +381,7 @@ html[data-look="y2k"] .chip{box-shadow:inset 0 0 0 2px rgba(94,90,143,.28)}
 html[data-look="y2k"] .tile{box-shadow:inset 0 0 0 2px rgba(94,90,143,.28),3px 3px 0 rgba(94,90,143,.28)}
 html[data-look="y2k"] .tile.add{box-shadow:none}
 html[data-look="y2k"] .treat{border:2px solid var(--edge);background:linear-gradient(#FFFFFF,#EEE9F7);color:var(--muted);box-shadow:2px 2px 0 var(--edge)}
-html[data-look="y2k"] .treat.ready,html[data-look="y2k"] .mtreat.ready{background:linear-gradient(#F2AFD0,#EA94C0);border-color:#A04B78;color:#3A0A24}
+html[data-look="y2k"] .treat.ready,html[data-look="y2k"] .mtreat.ready{background:linear-gradient(#E3B2E2,#D49AD4);border-color:#8A4D8A;color:#2A1438}
 html[data-look="y2k"] .treat.edit{background:transparent;border:2px dashed var(--line);box-shadow:none}
 html[data-look="y2k"] .tray{border-top:2px solid var(--edge);box-shadow:none}
 html[data-look="y2k"] .sheet{border:2px solid var(--edge);border-bottom:0}
@@ -401,7 +401,7 @@ html[data-look="y2k"] .score,html[data-look="y2k"] .day,html[data-look="y2k"] .t
 html[data-look="y2k"] .day.blank{background:rgba(255,255,255,.32);border:2px dashed var(--edge);box-shadow:none}
 html[data-look="y2k"] .tile,html[data-look="y2k"] .chip{border-radius:10px}
 html[data-look="y2k"] .treat,html[data-look="y2k"] .mtreat{border-radius:999px}
-html[data-look="y2k"] .treat.ready,html[data-look="y2k"] .mtreat.ready{background:linear-gradient(180deg,#F2AFD0,#EA94C0)}
+html[data-look="y2k"] .treat.ready,html[data-look="y2k"] .mtreat.ready{background:linear-gradient(180deg,#E3B2E2,#D49AD4)}
 html[data-look="y2k"] .iconbtn,html[data-look="y2k"] .hicon{border-radius:50%}
 html[data-look="y2k"] .goalbar,html[data-look="y2k"] .btn,html[data-look="y2k"] input,html[data-look="y2k"] select,html[data-look="y2k"] .hist .h,html[data-look="y2k"] .toast{border-radius:10px}
 .bubbles{display:none}

@@ -228,12 +228,12 @@ module.exports = async function run() {
     noErrors(p);
   });
 
-  await r.step('looks: each applies, bubbles only in Y2K, and old Simple brown/Riviera boards become Cobalt', async () => {
+  await r.step('looks: each applies, no animated bubbles anywhere, and old Simple brown/Riviera boards become Cobalt', async () => {
     const p = await fresh(board({ tiles: [T.pilates] }));
     for (const k of ['classic', 'y2k', 'cobalt', 'xp']) {
       await setLook(p, k);
       assert.strictEqual(await p.evaluate(() => document.documentElement.dataset.look), k);
-      assert.strictEqual(await p.isVisible('.bubbles'), k === 'y2k', `bubbles in ${k}`);
+      assert.strictEqual(await p.locator('.bub').count(), 0, `no animated bubbles in ${k}`);
     }
     for (const old of ['brown', 'riviera']) {
       const q = await fresh(board({ tiles: [T.pilates], look: old }));

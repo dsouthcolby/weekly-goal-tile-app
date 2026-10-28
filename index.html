@@ -354,7 +354,7 @@ html{overflow-x:hidden;overflow-x:clip}
 /* ---------- Y2K look: muted pastels, pixel fonts, square corners, pixel outlines, hard shadows ---------- */
 html[data-look="y2k"]{
   color-scheme:light;
-  /* Y2K bubbles: soft aqua and orchid, cyan-blue accent, orchid treats. */
+  /* Y2K pastel: soft aqua and orchid, cyan-blue accent, orchid treats. */
   --bg:#E6E6F5; --surface:#FBFEFF; --surface2:#F5F2FA; --ink:#1F3A57; --muted:#5A5A85; --line:#D9CFE8;
   --accent:#1A7AB8; --accent-ink:#FFFFFF; --accent-soft:#D6ECF7; --good:#3F7A55; --good-soft:#D8EDDF; --danger:#B23A45;
   --edge:#7E7AAE; /* pixel outlines and hard shadows */
@@ -394,39 +394,15 @@ html[data-look="y2k"] .toast{border:2px solid var(--ink)}
 html[data-look="y2k"] .brand{font-family:var(--arcade);font-size:15px;letter-spacing:0;line-height:1.5;text-shadow:2px 2px 0 var(--c0)}
 html[data-look="y2k"] .iconbtn{border:2px solid var(--edge);box-shadow:2px 2px 0 var(--edge);background:var(--surface)}
 html[data-look="y2k"] .auth-card h1{font-family:var(--arcade);font-size:17px;line-height:1.5;letter-spacing:0}
-/* Bubbles: soft see-through panels that keep the pixel outline and hard shadow, a rounded body font,
-   pill treats, and iridescent bath bubbles floating up behind everything. */
+/* Soft see-through panels that keep the pixel outline and hard shadow, a rounded body font, pill treats. */
 html[data-look="y2k"]{--body:"Nunito", -apple-system, "Segoe UI", system-ui, sans-serif}
-html[data-look="y2k"] .score,html[data-look="y2k"] .day,html[data-look="y2k"] .tray,html[data-look="y2k"] .dueline,html[data-look="y2k"] .sheet{border-radius:12px;border:2px solid var(--edge);background:rgba(255,255,255,.6);box-shadow:4px 4px 0 rgba(126,122,174,.35);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+html[data-look="y2k"] .score,html[data-look="y2k"] .day,html[data-look="y2k"] .tray,html[data-look="y2k"] .dueline,html[data-look="y2k"] .sheet{border-radius:12px;border:2px solid var(--edge);background:rgba(255,255,255,.72);box-shadow:4px 4px 0 rgba(126,122,174,.35)}
 html[data-look="y2k"] .day.blank{background:rgba(255,255,255,.32);border:2px dashed var(--edge);box-shadow:none}
 html[data-look="y2k"] .tile,html[data-look="y2k"] .chip{border-radius:10px}
 html[data-look="y2k"] .treat,html[data-look="y2k"] .mtreat{border-radius:999px}
 html[data-look="y2k"] .treat.ready,html[data-look="y2k"] .mtreat.ready{background:linear-gradient(180deg,#E3B2E2,#D49AD4)}
 html[data-look="y2k"] .iconbtn,html[data-look="y2k"] .hicon{border-radius:50%}
 html[data-look="y2k"] .goalbar,html[data-look="y2k"] .btn,html[data-look="y2k"] input,html[data-look="y2k"] select,html[data-look="y2k"] .hist .h,html[data-look="y2k"] .toast{border-radius:10px}
-.bubbles{display:none}
-html[data-look="y2k"] .bubbles{display:block;position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
-.bub{position:absolute;top:calc(var(--y) * 1%);width:var(--s);height:var(--s);opacity:var(--o)}
-.bub i{position:absolute;inset:0}
-.bub b{position:absolute;inset:0;border-radius:50%;filter:blur(var(--bl));background:radial-gradient(circle at 30% 27%,rgba(255,255,255,.85) 0 6%,rgba(255,255,255,0) 14%),radial-gradient(circle,rgba(255,255,255,.07) 0 64%,rgba(255,255,255,.38) 70%,rgba(255,255,255,0) 72%)}
-.bub b::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 210deg,#f5a6d3,#a6dcf5,#c9b3f5,#a9edca,#f5e6a6,#f5a6d3);-webkit-mask:radial-gradient(circle,transparent 66.5%,#000 69%,#000 70.5%,transparent 72%);mask:radial-gradient(circle,transparent 66.5%,#000 69%,#000 70.5%,transparent 72%);opacity:.75}
-.bub b::after{content:'';position:absolute;left:58%;top:62%;width:14%;height:8%;border-radius:50%;background:rgba(255,255,255,.45);transform:rotate(-35deg)}
-.bub b{transition:opacity 2.5s ease}
-.bub.popped b{animation:bub-pop .35s ease-out forwards!important}
-.bub.gone b{opacity:0;transition:none}
-@keyframes bub-pop{to{transform:scale(1.35);opacity:0}}
-/* Float slowly up on their own wandering paths, wobbling, the colours turning; small ones sit further back.
-   With reduced motion they stay put. */
-@media (prefers-reduced-motion: no-preference){
-  html[data-look="y2k"] .bub{top:100%;will-change:transform;animation:bub-rise var(--d) linear infinite;animation-delay:calc(var(--y) * var(--d) / -100)}
-  html[data-look="y2k"] .bub i{animation:bub-sway var(--sd) ease-in-out infinite alternate;animation-delay:calc(var(--sd) / -2)}
-  html[data-look="y2k"] .bub b{animation:bub-wob var(--wd) ease-in-out infinite}
-  html[data-look="y2k"] .bub b::before{animation:bub-spin var(--rd) linear infinite}
-}
-@keyframes bub-rise{to{transform:translateY(-125vh)}}
-@keyframes bub-sway{from{transform:translateX(calc(var(--sx) * -1))}to{transform:translateX(var(--sx))}}
-@keyframes bub-wob{0%,100%{transform:scale(1,1)}25%{transform:scale(1.05,.95)}50%{transform:scale(.97,1.03)}75%{transform:scale(1.03,.97)}}
-@keyframes bub-spin{to{transform:rotate(360deg)}}
 
 /* ---------- Cobalt look: cobalt sky, white panels, soft Bauhaus tiles, italic serif headings ---------- */
 html[data-look="cobalt"]{
@@ -879,7 +855,7 @@ try { const l = JSON.parse(localStorage.getItem('tw2:lib')), k = (l && l.look) |
       <div class="looks" id="looks" role="group" aria-labelledby="lookLab">
         <button class="look-opt" type="button" data-look="xp" aria-pressed="false"><i class="ls-xp" aria-hidden="true"></i>Windows XP</button>
         <button class="look-opt" type="button" data-look="classic" aria-pressed="false"><i class="ls-classic" aria-hidden="true"></i>Windows Classic</button>
-        <button class="look-opt" type="button" data-look="y2k" aria-pressed="false"><i class="ls-y2k" aria-hidden="true"></i>Y2K bubbles</button>
+        <button class="look-opt" type="button" data-look="y2k" aria-pressed="false"><i class="ls-y2k" aria-hidden="true"></i>Y2K pastel</button>
         <button class="look-opt" type="button" data-look="cobalt" aria-pressed="false"><i class="ls-cobalt" aria-hidden="true"></i>Cobalt</button>
       </div>
       <span class="help">Changes save as you go, on all your devices.</span></div>
@@ -975,7 +951,7 @@ const SEED = {
   ],
 };
 // The app's look. Saved with the settings, so every device shows the same one.
-const LOOKS = { xp: 'Windows XP', classic: 'Windows Classic', y2k: 'Y2K bubbles', cobalt: 'Cobalt' };
+const LOOKS = { xp: 'Windows XP', classic: 'Windows Classic', y2k: 'Y2K pastel', cobalt: 'Cobalt' };
 // Cobalt replaced the Simple brown look (and was briefly called Riviera); boards saved in either move to it.
 const lookId = k => k === 'brown' || k === 'riviera' ? 'cobalt' : k;
 // How the tile tray is ordered. Saved with the tiles, so every device shows the same order.
@@ -1392,32 +1368,6 @@ const lookKnown = () => !!LOOKS[lookId(LS.get('look'))];
 const lookNow = () => !$('#auth').hidden && !lookKnown() ? 'plain' : lib.look;
 // Show a look: the page styles key off data-look on <html>, and the phone's status bar follows.
 let lookShown = null;
-// The bath-bubble background for the Y2K look: made once, hidden in the other looks.
-(function makeBubbles() {
-  let x = 7; const r = () => (x = (x * 9301 + 49297) % 233280) / 233280;
-  const layer = document.createElement('div'); layer.className = 'bubbles'; layer.setAttribute('aria-hidden', 'true');
-  for (let i = 0; i < 46; i++) {
-    const b = document.createElement('span'), size = Math.round(i % 3 === 0 ? 110 + r() * 80 : 32 + r() * 60);
-    const near = Math.min(1, (size - 32) / 150);   // 0 = small and far back, 1 = big and up front
-    b.className = 'bub';
-    b.innerHTML = '<i><b></b></i>';
-    b.style.cssText = `left:${Math.round(r() * 104 - 4)}%;--s:${size}px;--y:${Math.round(r() * 100)}`
-      + `;--d:${Math.round(90 - near * 45 + r() * 10)}s;--o:${(.5 + near * .44).toFixed(2)};--bl:${((1 - near) * .8).toFixed(1)}px`
-      + `;--sx:${Math.round(8 + r() * 26)}px;--sd:${(5 + r() * 7).toFixed(1)}s;--wd:${(4 + r() * 5).toFixed(1)}s;--rd:${Math.round(18 + r() * 30)}s`;
-    layer.appendChild(b);
-  }
-  document.body.prepend(layer);
-})();
-// Earning points pops a few of the bubbles on screen; they drift back in a few seconds later.
-function popBubbles(n = 3) {
-  if (calm() || document.documentElement.dataset.look !== 'y2k') return;
-  const seen = [...document.querySelectorAll('.bubbles .bub:not(.popped):not(.gone)')].filter(b => { const r = b.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth; });
-  for (const b of seen.sort(() => Math.random() - .5).slice(0, n)) {
-    b.classList.add('popped'); sparkle(b, 6, 1);
-    setTimeout(() => { b.classList.replace('popped', 'gone'); }, 400);
-    setTimeout(() => { b.classList.remove('gone'); }, 4500);
-  }
-}
 function applyLook(k) {
   if (k === lookShown) return;
   lookShown = k;
@@ -1525,7 +1475,7 @@ function addItem(tileId, day) {
   P[item.id] = item; dirty.p[item.id] = 1;
   changed();
   const chip = document.querySelector(`[data-item="${item.id}"]`); if (chip) chip.classList.add('pop');
-  billCelebrate(); popBubbles();
+  billCelebrate();
   const after = before + item.points;
   const dayAfter = dayBefore + item.points, dayName = DAYS_FULL[addDays(fromIso(curStart), Number(day)).getDay()];
   const unlocked = lib.rewards.filter(r => before < r.points && after >= r.points);

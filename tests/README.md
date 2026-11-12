@@ -23,5 +23,6 @@ node tests/local.test.js         # or one file
 node tests/shot.js y2k shot.png  # a screenshot of a look, for checking designs
 ```
 
-If Playwright is installed somewhere else, point to it with `PLAYWRIGHT_PATH=/path/to/playwright`,
-and to a Chromium binary with `CHROMIUM_PATH`.
+In Claude Code's cloud containers Playwright and Chromium are already installed and found
+automatically, so `node tests/run.js` works with no setup. Elsewhere, install as above, or point to
+an existing copy with `PLAYWRIGHT_PATH=/path/to/playwright` and to a Chromium binary with `CHROMIUM_PATH`.

@@ -3,7 +3,14 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
+// Playwright from PLAYWRIGHT_PATH, a local install, or the copy preinstalled in Claude Code's cloud containers.
+const { chromium } = (() => {
+  for (const p of [process.env.PLAYWRIGHT_PATH, 'playwright', '/opt/node22/lib/node_modules/playwright']) {
+    if (!p) continue;
+    try { return require(p); } catch {}
+  }
+  throw new Error('Playwright not found. See tests/README.md.');
+})();
 
 const ROOT = path.resolve(__dirname, '..');
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.json': 'application/json' };
